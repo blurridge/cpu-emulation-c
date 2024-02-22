@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 
 int addition(int op1, int op2)
 {
@@ -41,7 +42,7 @@ void display_controlSignalType(unsigned char control_signals)
     }
     else if (control_signals == 0x02)
     {
-        printf("Substraction");
+        printf("Subtraction");
     }
     else if (control_signals == 0x03)
     {
@@ -53,25 +54,21 @@ void display_controlSignalType(unsigned char control_signals)
     }
 }
 
-void delay(int cnt)
-{
-    int i;
-    for (i = 0; i <= cnt; i++)
-    {
-    }
+void delay(int seconds) {
+    sleep(seconds);
 }
 
-void output_display(int opr1, int opr2, unsigned char control_signals, int result)
+void output_display(int operand1, int operand2, unsigned char control_signals, int result)
 {
-    int x = 1000000;
+    int x = 3;
     printf("\nFetching operands....");
     delay(x);
 
     printf("\nOP1 = ");
-    printBin(opr1, 0x08);
+    printBin(operand1, 0x08);
 
     printf("\nOP2  = ");
-    printBin(opr2, 0x08);
+    printBin(operand2, 0x08);
 
     printf("\nOperation = ");
     display_controlSignalType(control_signals);
