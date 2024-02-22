@@ -61,23 +61,28 @@ void delay(int seconds) {
 void output_display(unsigned char operand1, unsigned char operand2, unsigned char control_signals, int result)
 {
     int x = 3;
-    printf("\nFetching operands....");
+    int y = 2;
+    printf("\n==============================================\n");
+    printf("Fetching operands....");
     delay(x);
 
     printf("\nOP1 = ");
     printBin((int)operand1, 0x08);
+    delay(y);
 
     printf("\nOP2  = ");
     printBin((int)operand2, 0x08);
+    delay(y);
 
-    printf("\n\nOperation = ");
+    printf("\nOperation = ");
     display_controlSignalType(control_signals);
 
-    printf("\nProcessing OP1 & OP2....");
+    printf("\n\nProcessing OP1 & OP2....");
     delay(x);
 
     printf("\nResult = ");
     printBin(result, 0x08);
+    printf("\n==============================================");
 }
 
 int main()
