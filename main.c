@@ -58,19 +58,19 @@ void delay(int seconds) {
     sleep(seconds);
 }
 
-void output_display(int operand1, int operand2, unsigned char control_signals, int result)
+void output_display(unsigned char operand1, unsigned char operand2, unsigned char control_signals, int result)
 {
     int x = 3;
     printf("\nFetching operands....");
     delay(x);
 
     printf("\nOP1 = ");
-    printBin(operand1, 0x08);
+    printBin((int)operand1, 0x08);
 
     printf("\nOP2  = ");
-    printBin(operand2, 0x08);
+    printBin((int)operand2, 0x08);
 
-    printf("\nOperation = ");
+    printf("\n\nOperation = ");
     display_controlSignalType(control_signals);
 
     printf("\nProcessing OP1 & OP2....");
@@ -84,16 +84,19 @@ int main()
 {
     int result;
     printf("First Input: ");
-    unsigned char operand1;
-    scanf("%hhx", &operand1);
+    unsigned int temp_operand1;
+    scanf("%i", &temp_operand1);
+    unsigned char operand1 = (unsigned char)temp_operand1;
 
     printf("\nSecond Input: ");
-    unsigned char operand2;
-    scanf("%hhx", &operand2);
+    unsigned int temp_operand2;
+    scanf("%i", &temp_operand2);
+    unsigned char operand2 = (unsigned char)temp_operand2;
 
     printf("\nOperation: ");
-    unsigned char control_signals;
-    scanf("%hhx", &control_signals);
+    unsigned int temp_control_signals;
+    scanf("%i", &temp_control_signals);
+    unsigned char control_signals = (unsigned char)temp_control_signals;
 
     result = ALU(operand1, operand2, control_signals);
     output_display((int)operand1, (int)operand2, control_signals, result);
