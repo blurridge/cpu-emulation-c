@@ -7,13 +7,26 @@ int addition(int op1, int op2)
     return sum;
 }
 
+int subtraction(int op1, int op2){
+    int temp = NOT(op2);
+    int sum = addition(op1, temp);
+    return sum;
+}
+
+int NOT(int op){
+    return ~op+1; //need to +1 because bogo ang NOT for some reason
+}
+
 int ALU(unsigned char operand1, unsigned char operand2, unsigned char control_signals)
 {
     int result = 0;
     if (control_signals == 0x01)
     {
         result = addition((int)operand1, (int)operand2);
-        return result;
+    }
+    if (control_signals == 0x02)
+    {
+        result = subtraction((int)operand1, (int)operand2);
     }
     return result;
 }
