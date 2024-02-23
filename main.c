@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <stdbool.h>
+
 
 int addition(int op1, int op2)
 {
@@ -15,6 +17,14 @@ int subtraction(int op1, int op2){
 
 int NOT(int op){
     return ~op+1; //need to +1 because bogo ang NOT for some reason
+}
+
+unsigned char shiftRight(unsigned char op1){
+    return op1 >> 1;
+}
+
+unsigned char shiftLeft(unsigned char op1){
+    return op1 << 1;
 }
 
 int ALU(unsigned char operand1, unsigned char operand2, unsigned char control_signals)
