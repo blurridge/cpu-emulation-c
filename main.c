@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 int addition(int op1, int op2)
 {
@@ -19,6 +20,30 @@ int subtraction(int op1, int op2)
     return sum;
 }
 
+int multiplication(unsigned char op1, unsigned char op2)
+{
+    int ACC;          // Product
+    int Qn1;          // least significant bit Qn+1
+    unsigned char BR; // Multipicand - A
+    int QR;           // Multiplier - M
+    int SC;           // Number of Rows - n
+    BR = op1;
+
+    printBin((int)BR, 0x08);
+
+    return ACC;
+}
+
+unsigned char shiftRight(unsigned char op1)
+{
+    return op1 >> 1;
+}
+
+unsigned char shiftLeft(unsigned char op1)
+{
+    return op1 << 1;
+}
+
 int ALU(unsigned char operand1, unsigned char operand2, unsigned char control_signals)
 {
     int result = 0;
@@ -26,9 +51,13 @@ int ALU(unsigned char operand1, unsigned char operand2, unsigned char control_si
     {
         result = addition((int)operand1, (int)operand2);
     }
-    if (control_signals == 0x02)
+    else if (control_signals == 0x02)
     {
         result = subtraction((int)operand1, (int)operand2);
+    }
+    else if (control_signals == 0x03)
+    {
+        result = multiplication((int)operand1, (int)operand2);
     }
     return result;
 }
@@ -105,8 +134,9 @@ int main()
 {
     int result;
     printf("First Input: ");
-    unsigned int temp_operand1;
+    unsigned char temp_operand1;
     scanf("%i", &temp_operand1);
+    printf("First Input: >", temp_operand1);
     unsigned char operand1 = (unsigned char)temp_operand1;
 
     printf("\nSecond Input: ");
@@ -120,6 +150,7 @@ int main()
     unsigned char control_signals = (unsigned char)temp_control_signals;
 
     result = ALU(operand1, operand2, control_signals);
+
     output_display((int)operand1, (int)operand2, control_signals, result);
 
     return 0;
