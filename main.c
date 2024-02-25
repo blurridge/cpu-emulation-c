@@ -2,16 +2,32 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+bool SF, OF, ZF, CF;
 
-int addition(int op1, int op2)
+void setFlag(unsigned int ACC){
+    if (ACC == 0x0000){
+        ZF = 1;
+    }
+    else if (ACC & 0x0080 == 0x0080){
+        SF = 1;
+    }
+    else if (ACC > 0X7F){
+        OF = 1;
+    }
+    else if (ACC > 0xFF){
+        CF = 1;
+    }
+}
+
+int addition(unsigned char op1, unsigned char op2)
 {
-    int sum = op1 + op2;
+    unsigned int sum = op1 + op2;
     return sum;
 }
 
-int subtraction(int op1, int op2){
-    int temp = NOT(op2);
-    int sum = addition(op1, temp);
+int subtraction(unsigned char op1, unsigned char op2){
+    unsigned char temp = NOT(op2);
+    unsigned int sum = addition(op1, temp);
     return sum;
 }
 
@@ -29,16 +45,19 @@ unsigned char shiftLeft(unsigned char op1){
 
 int ALU(unsigned char operand1, unsigned char operand2, unsigned char control_signals)
 {
-    int result = 0;
+    unsigned int ACC = 0x0000;
+    SF = 0, CF = 0, ZF = 0, OF = 0;
     if (control_signals == 0x01)
     {
-        result = addition((int)operand1, (int)operand2);
+        ACC = addition(operand1, operand2);
     }
     if (control_signals == 0x02)
     {
-        result = subtraction((int)operand1, (int)operand2);
+        ACC = subtraction(operand1, operand2);
     }
-    return result;
+    setFlag(ACC);
+    
+    return ACC;
 }
 
 void printBin(int data, unsigned char data_width)
@@ -111,20 +130,20 @@ void output_display(unsigned char operand1, unsigned char operand2, unsigned cha
 int main()
 {
     int result;
+    unsigned char temp_operand1;
+    unsigned char temp_operand2;
+    unsigned char temp_control_signals;
     printf("First Input: ");
-    unsigned int temp_operand1;
     scanf("%i", &temp_operand1);
-    unsigned char operand1 = (unsigned char)temp_operand1;
+    unsigned char operand1 = temp_operand1;
 
     printf("\nSecond Input: ");
-    unsigned int temp_operand2;
     scanf("%i", &temp_operand2);
-    unsigned char operand2 = (unsigned char)temp_operand2;
+    unsigned char operand2 = temp_operand2;
 
     printf("\nOperation: ");
-    unsigned int temp_control_signals;
     scanf("%i", &temp_control_signals);
-    unsigned char control_signals = (unsigned char)temp_control_signals;
+    unsigned char control_signals = temp_control_signals;
 
     result = ALU(operand1, operand2, control_signals);
     output_display((int)operand1, (int)operand2, control_signals, result);
