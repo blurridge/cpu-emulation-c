@@ -19,7 +19,9 @@ int subtraction(unsigned char op1, unsigned char op2);
 int multiplication(unsigned char operand1, unsigned char operand2, unsigned char control_signals);
 unsigned char twosComp(unsigned char op);
 int ALU(unsigned char operand1, unsigned char operand2, unsigned char control_signals);
-void outputDisplay(unsigned char operand1, unsigned char operand2, unsigned char control_signals, int result);
+void printOperands(unsigned char operand1, unsigned char operand2, unsigned char controlSignals);
+void outputDisplay(unsigned char control_signals, int result);
+void printFlags();
 
 int main()
 {
@@ -45,19 +47,9 @@ int main()
         scanf("%hhx", &operand2);
     }
     
-    if (controlSignals == 0x03)
-    {
-        result = ALU(operand1, operand2, controlSignals);
-        printf("\nAccumulator = ");
-        printBin(result, 0x10);
-        printf("\n==============================================");
-    }
-
-    else
-    {
-        result = ALU(operand1, operand2, controlSignals);
-        outputDisplay(operand1, operand2, controlSignals, result);
-    }
+    printOperands(operand1, operand2, controlSignals);
+    result = ALU(operand1, operand2, controlSignals);
+    outputDisplay(controlSignals, result);
 
     return 0;
 }
@@ -180,23 +172,6 @@ int multiplication(unsigned char operand1, unsigned char operand2, unsigned char
     unsigned char BR;       // Multipicand - A
     unsigned char Q;        // Q
 
-    int x = 1;
-    int y = 1;
-    printf("\n==============================================\n");
-    printf("Fetching operands....");
-    delay(x);
-
-    printf("\nOP1 = ");
-    printBin((int)operand1, 0x08);
-    delay(y);
-
-    printf("\nOP2  = ");
-    printBin((int)operand2, 0x08);
-    delay(y);
-
-    printf("\nOperation = ");
-    displayControlSignalType(control_signals);
-
     printf("\n    A        Q    Qn1     M    n\n");
 
     int current_operation = 0;
@@ -305,7 +280,6 @@ int multiplication(unsigned char operand1, unsigned char operand2, unsigned char
     }
 
     printf("\n\nProcessing OP1 & OP2....");
-    delay(x);
     ACC = (BR << 8) | Q;
     return ACC;
 }
@@ -380,8 +354,7 @@ void printBin(int data, unsigned char data_width)
     printf("%0*lu", data_width, sum);
 }
 
-void outputDisplay(unsigned char operand1, unsigned char operand2, unsigned char control_signals, int result)
-{
+void printOperands(unsigned char operand1, unsigned char operand2, unsigned char controlSignals) {
     int x = 3;
     int y = 2;
     printf("\n==============================================\n");
@@ -397,12 +370,24 @@ void outputDisplay(unsigned char operand1, unsigned char operand2, unsigned char
     delay(y);
 
     printf("\nOperation = ");
-    displayControlSignalType(control_signals);
+    displayControlSignalType(controlSignals);
 
     printf("\n\nProcessing OP1 & OP2....");
     delay(x);
+}
 
-    printf("\nResult = ");
-    printBin(result, 0x08);
+void outputDisplay(unsigned char controlSignals, int result)
+{
+    printf("\nAccumulator = ");
+    if(controlSignals == 0x03)
+        printBin(result, 0x10);
+    else
+        printBin(result, 0x08);
+    printFlags();
     printf("\n==============================================");
+}
+
+void printFlags() 
+{
+    printf("\nZF=%d, CF=%d, SF=%d, OF=%d", ZF, CF, SF, OF);
 }
