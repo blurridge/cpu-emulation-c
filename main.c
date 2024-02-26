@@ -4,52 +4,59 @@
 
 bool SF, OF, ZF, CF;
 
-int NOT(int op);
+unsigned char NOT(unsigned char op);
+unsigned char AND(unsigned char op1, unsigned char op2);
+unsigned char OR(unsigned char op1, unsigned char op2);
+unsigned char XOR(unsigned char op1, unsigned char op2);
+unsigned char shiftRight(unsigned char op1);
+unsigned char shiftLeft(unsigned char op1);
 void printBin(int data, unsigned char data_width);
 void delay(int seconds);
-void display_controlSignalType(unsigned char control_signals);
+void displayControlSignalType(unsigned char control_signals);
 void setFlag(unsigned int ACC);
 int addition(unsigned char op1, unsigned char op2);
 int subtraction(unsigned char op1, unsigned char op2);
-unsigned char twosComplement(unsigned char op);
 int multiplication(unsigned char operand1, unsigned char operand2, unsigned char control_signals);
-void printBinary(unsigned short int combined, unsigned char data_width);
-unsigned char shiftRight(unsigned char op1);
-unsigned char shiftLeft(unsigned char op1);
+unsigned char twosComp(unsigned char op);
 int ALU(unsigned char operand1, unsigned char operand2, unsigned char control_signals);
-void output_display(unsigned char operand1, unsigned char operand2, unsigned char control_signals, int result);
+void outputDisplay(unsigned char operand1, unsigned char operand2, unsigned char control_signals, int result);
 
 int main()
 {
     unsigned int result;
-    unsigned char temp_operand1;
-    unsigned char temp_operand2;
-    unsigned char temp_control_signals;
-    printf("First Input: ");
-    scanf("%hhx", &temp_operand1);
-    unsigned char operand1 = temp_operand1;
-
-    printf("\nSecond Input: ");
-    scanf("%hhx", &temp_operand2);
-    unsigned char operand2 = temp_operand2;
+    unsigned char operand1, controlSignals;
+    unsigned char operand2 = 0x00;
 
     printf("\nOperation: ");
-    scanf("%hhx", &temp_control_signals);
-    unsigned char control_signals = temp_control_signals;
+    scanf("%hhx", &controlSignals);
 
-    if (temp_control_signals == 0x03)
+    if(controlSignals < 0x01 || controlSignals > 0x09) 
     {
-        result = ALU(operand1, operand2, control_signals);
+        printf("Not a valid operation.");
+        return 0;
+    }
+
+    printf("First Input: ");
+    scanf("%hhx", &operand1);
+
+    if(controlSignals != 0x06 && controlSignals != 0x08 && controlSignals != 0x09)
+    {
+        printf("Second Input: ");
+        scanf("%hhx", &operand2);
+    }
+    
+    if (controlSignals == 0x03)
+    {
+        result = ALU(operand1, operand2, controlSignals);
         printf("\nAccumulator = ");
-        // printBin(result, 0x10);
-        printBinary(result, 0x10); // Using the printBinary Function as printBin is not working properly in printing 16 bits of binary.
+        printBin(result, 0x10);
         printf("\n==============================================");
     }
 
     else
     {
-        result = ALU(operand1, operand2, control_signals);
-        output_display(operand1, operand2, control_signals, result);
+        result = ALU(operand1, operand2, controlSignals);
+        outputDisplay(operand1, operand2, controlSignals, result);
     }
 
     return 0;
@@ -60,7 +67,7 @@ void delay(int seconds)
     sleep(seconds);
 }
 
-void display_controlSignalType(unsigned char control_signals)
+void displayControlSignalType(unsigned char control_signals)
 {
     if (control_signals == 0x01)
     {
@@ -77,6 +84,26 @@ void display_controlSignalType(unsigned char control_signals)
     else if (control_signals == 0x04)
     {
         printf("AND Bitwise");
+    }
+    else if (control_signals == 0x05)
+    {
+        printf("OR Bitwise");
+    }
+    else if (control_signals == 0x06)
+    {
+        printf("NOT Bitwise");
+    }
+    else if (control_signals == 0x07)
+    {
+        printf("XOR Bitwise");
+    }
+    else if (control_signals == 0x08)
+    {
+        printf("Shift Right (Logical)");
+    }
+    else if (control_signals == 0x09)
+    {
+        printf("Shift Left (Logical)");
     }
 }
 
@@ -100,27 +127,50 @@ void setFlag(unsigned int ACC)
     }
 }
 
-int NOT(int op)
+unsigned char NOT(unsigned char op)
 {
     return ~op;
 }
 
-unsigned char twosComplement(unsigned char op) 
+unsigned char AND(unsigned char op1, unsigned char op2)
+{
+    return op1 & op2;
+}
+
+unsigned char OR(unsigned char op1, unsigned char op2)
+{
+    return op1 | op2;
+}
+
+unsigned char XOR(unsigned char op1, unsigned char op2) 
+{
+    return op1 ^ op2;
+}
+
+unsigned char twosComp(unsigned char op)
 {
     return ~op + 1;
 }
 
 int addition(unsigned char op1, unsigned char op2)
 {
+    if ((op1 & 0x80) == 0x80)
+    {
+        op1 = twosComp(op1);
+    }
+    else if ((op1 & 0x80) == 0x80)
+    {
+        op2 = twosComp(op2);
+    }
     unsigned int sum = op1 + op2;
     return sum;
 }
 
 int subtraction(unsigned char op1, unsigned char op2)
 {
-    unsigned char temp = twosComplement(op2);
-    unsigned int sum = addition(op1, temp);
-    return sum;
+    op2 = twosComp(op2);
+    unsigned int difference = op1 + op2;
+    return difference;
 }
 
 int multiplication(unsigned char operand1, unsigned char operand2, unsigned char control_signals)
@@ -145,7 +195,7 @@ int multiplication(unsigned char operand1, unsigned char operand2, unsigned char
     delay(y);
 
     printf("\nOperation = ");
-    display_controlSignalType(control_signals);
+    displayControlSignalType(control_signals);
 
     printf("\n    A        Q    Qn1     M    n\n");
 
@@ -225,7 +275,7 @@ int multiplication(unsigned char operand1, unsigned char operand2, unsigned char
             }
             else if (((Q & 0x01) == 0x00) && (Qn1 == 0x01))
             {
-                BR = addition(BR, operand1);
+                BR = BR + operand1;
 
                 LSB_A = BR & 0x01;
                 LSB_Q = Q & 0x01;
@@ -260,14 +310,6 @@ int multiplication(unsigned char operand1, unsigned char operand2, unsigned char
     return ACC;
 }
 
-void printBinary(unsigned short int combined, unsigned char data_width) // Another Print that converts to Binary, feel fre to discard if unnecessary
-{
-    for (int i = (data_width - 1); i >= 0; --i)
-    {
-        putchar((combined & (1 << i)) ? '1' : '0');
-    }
-}
-
 unsigned char shiftRight(unsigned char op1)
 {
     return op1 >> 1;
@@ -294,6 +336,30 @@ int ALU(unsigned char operand1, unsigned char operand2, unsigned char control_si
     {
         ACC = multiplication(operand1, operand2, control_signals);
     }
+    else if (control_signals == 0x04)
+    {
+        ACC = AND(operand1, operand2);
+    }
+    else if (control_signals == 0x05)
+    {
+        ACC = OR(operand1, operand2);
+    }
+    else if (control_signals == 0x06)
+    {
+        ACC = NOT(operand1);
+    }
+    else if (control_signals == 0x07)
+    {
+        ACC = XOR(operand1, operand2);
+    }
+    else if (control_signals == 0x08)
+    {
+        ACC = shiftRight(operand1);
+    }
+    else if (control_signals == 0x09)
+    {
+        ACC = shiftLeft(operand1);
+    }
     setFlag(ACC);
     return ACC;
 }
@@ -314,7 +380,7 @@ void printBin(int data, unsigned char data_width)
     printf("%0*lu", data_width, sum);
 }
 
-void output_display(unsigned char operand1, unsigned char operand2, unsigned char control_signals, int result)
+void outputDisplay(unsigned char operand1, unsigned char operand2, unsigned char control_signals, int result)
 {
     int x = 3;
     int y = 2;
@@ -331,7 +397,7 @@ void output_display(unsigned char operand1, unsigned char operand2, unsigned cha
     delay(y);
 
     printf("\nOperation = ");
-    display_controlSignalType(control_signals);
+    displayControlSignalType(control_signals);
 
     printf("\n\nProcessing OP1 & OP2....");
     delay(x);
