@@ -46,7 +46,7 @@ int main()
         printf("Second Input: ");
         scanf("%hhx", &operand2);
     }
-    
+
     printOperands(operand1, operand2, controlSignals);
     result = ALU(operand1, operand2, controlSignals);
     outputDisplay(controlSignals, result);
@@ -105,15 +105,15 @@ void setFlag(unsigned int ACC)
     {
         ZF = 1;
     }
-    else if ((ACC & 0x0080) == 0x0080)
+    if ((ACC & 0x0080) == 0x0080)
     {
         SF = 1;
     }
-    else if (ACC > 0X7F)
+    if (ACC > 0X7F)
     {
         OF = 1;
     }
-    else if (ACC > 0xFF)
+    if (ACC > 0xFF)
     {
         CF = 1;
     }
