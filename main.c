@@ -32,7 +32,7 @@ int main()
     printf("\nOperation: ");
     scanf("%hhx", &controlSignals);
 
-    if(controlSignals < 0x01 || controlSignals > 0x09) 
+    if (controlSignals < 0x01 || controlSignals > 0x09)
     {
         printf("Not a valid operation.");
         return 0;
@@ -41,7 +41,7 @@ int main()
     printf("First Input: ");
     scanf("%hhx", &operand1);
 
-    if(controlSignals != 0x06 && controlSignals != 0x08 && controlSignals != 0x09)
+    if (controlSignals != 0x06 && controlSignals != 0x08 && controlSignals != 0x09)
     {
         printf("Second Input: ");
         scanf("%hhx", &operand2);
@@ -63,39 +63,39 @@ void displayControlSignalType(unsigned char control_signals)
 {
     if (control_signals == 0x01)
     {
-        printf("Addition");
+        printf("ADD");
     }
     else if (control_signals == 0x02)
     {
-        printf("Subtraction");
+        printf("SUB");
     }
     else if (control_signals == 0x03)
     {
-        printf("Multiplication");
+        printf("MUL");
     }
     else if (control_signals == 0x04)
     {
-        printf("AND Bitwise");
+        printf("AND");
     }
     else if (control_signals == 0x05)
     {
-        printf("OR Bitwise");
+        printf("OR");
     }
     else if (control_signals == 0x06)
     {
-        printf("NOT Bitwise");
+        printf("NOT");
     }
     else if (control_signals == 0x07)
     {
-        printf("XOR Bitwise");
+        printf("XOR");
     }
     else if (control_signals == 0x08)
     {
-        printf("Shift Right (Logical)");
+        printf("SHR");
     }
     else if (control_signals == 0x09)
     {
-        printf("Shift Left (Logical)");
+        printf("SHL");
     }
 }
 
@@ -134,7 +134,7 @@ unsigned char OR(unsigned char op1, unsigned char op2)
     return op1 | op2;
 }
 
-unsigned char XOR(unsigned char op1, unsigned char op2) 
+unsigned char XOR(unsigned char op1, unsigned char op2)
 {
     return op1 ^ op2;
 }
@@ -167,120 +167,45 @@ int subtraction(unsigned char op1, unsigned char op2)
 
 int multiplication(unsigned char operand1, unsigned char operand2, unsigned char control_signals)
 {
-    unsigned short int ACC; // Product
-    unsigned char Qn1;      // least significant bit Qn+1
-    unsigned char BR;       // Multipicand - A
-    unsigned char Q;        // Q
+    unsigned char Qn1 = 0x00;   // least significant bit Qn+1
+    unsigned char A = 0x00;     // Multipicand - A
+    unsigned char Q = operand2; // Q
 
     printf("\n    A        Q    Qn1     M    n\n");
 
-    int current_operation = 0;
-    Q = operand2;
-    BR = 0x00;
-    unsigned char LSB_A; // Multipicand - A
-    unsigned char LSB_Q;
-
-    unsigned char MSB_M = (operand1 >> 7) & 0x01;
-
     for (int i = 0; i <= 8; i++)
     {
-        LSB_A = BR & 0x01;
-        LSB_Q = Q & 0x01;
-        if (i == 0)
+        printBin((int)A, 0x08);
+        printf(" ");
+        printBin((int)Q, 0x08);
+        printf("  %x  ", Qn1);
+        printBin((int)operand1, 0x08);
+        printf(" %d\n", i);
+
+        if (((Q & 0x01) == 0x01) && (Qn1 == 0x00)) // {Q,Qn1} = 10
         {
-            Qn1 = 0x00;
-            printBin((int)BR, 0x08);
-            printf(" ");
-            printBin((int)Q, 0x08);
-            printf("  %x  ", Qn1);
-            printBin((int)operand1, 0x08);
-            printf(" %d\n", i);
+            A = subtraction(A, operand1);
         }
-        else
+        else if (((Q & 0x01) == 0x00) && (Qn1 == 0x01)) // {Q,Qn1} = 01
         {
-            if (((Q & 0x01) == 0x01) && (Qn1 == 0x01))
-            {
-                BR = BR >> 1;
-                Q = Q >> 1;
-
-                Q = Q | (LSB_A << 7);
-                Qn1 = LSB_Q;
-
-                if (current_operation == 1)
-                {
-                    BR = BR | 0x80;
-                }
-            }
-
-            else if (((Q & 0x01) == 0x00) && (Qn1 == 0x00))
-            {
-                BR = BR >> 1;
-                Q = Q >> 1;
-
-                Q = Q | (LSB_A << 7);
-                Qn1 = LSB_Q;
-
-                if (current_operation == 1)
-                {
-                    BR = BR | 0x80;
-                }
-            }
-
-            else if (((Q & 0x01) == 0x01) && (Qn1 == 0x00))
-            {
-                BR = subtraction(BR, operand1);
-
-                LSB_A = BR & 0x01;
-                LSB_Q = Q & 0x01;
-
-                BR = BR >> 1;
-                Q = Q >> 1;
-
-                Q = Q | (LSB_A << 7);
-                Qn1 = LSB_Q;
-                if (MSB_M == 0x01)
-                {
-                    current_operation = 0;
-                }
-                else
-                {
-                    current_operation = 1;
-                    BR = BR | 0x80;
-                }
-            }
-            else if (((Q & 0x01) == 0x00) && (Qn1 == 0x01))
-            {
-                BR = BR + operand1;
-
-                LSB_A = BR & 0x01;
-                LSB_Q = Q & 0x01;
-
-                BR = BR >> 1;
-                Q = Q >> 1;
-
-                Q = Q | (LSB_A << 7);
-                Qn1 = LSB_Q;
-                if (MSB_M == 0x01)
-                {
-                    current_operation = 1;
-                    BR = BR | 0x80;
-                }
-                else
-                {
-                    current_operation = 0;
-                }
-            }
-            printBin((int)BR, 0x08);
-            printf(" ");
-            printBin((int)Q, 0x08);
-            printf("  %x  ", Qn1);
-            printBin((int)operand1, 0x08);
-            printf(" %d\n", i);
+            A = A + operand1;
         }
+
+        unsigned char MSB_A = (A >> 7) & 0x01;
+        unsigned char LSB_A = A & 0x01;
+        unsigned char LSB_Q = Q & 0x01;
+
+        A = A >> 1; // Shifting A
+        Q = Q >> 1; // Shifting Q
+
+        Q = Q | (LSB_A << 7); // LSM of A is shifted to the MSB of Q
+
+        Qn1 = LSB_Q; // Store LSB of Q to Qn1 for conditions
+
+        A = A | (MSB_A << 7); // Either Shift 1 or 0 to the MSB of A
     }
 
-    printf("\n\nProcessing OP1 & OP2....");
-    ACC = (BR << 8) | Q;
+    unsigned short int ACC = (A << 8) | Q;
     return ACC;
 }
 
@@ -354,7 +279,8 @@ void printBin(int data, unsigned char data_width)
     printf("%0*lu", data_width, sum);
 }
 
-void printOperands(unsigned char operand1, unsigned char operand2, unsigned char controlSignals) {
+void printOperands(unsigned char operand1, unsigned char operand2, unsigned char controlSignals)
+{
     int x = 3;
     int y = 2;
     printf("\n==============================================\n");
@@ -379,15 +305,12 @@ void printOperands(unsigned char operand1, unsigned char operand2, unsigned char
 void outputDisplay(unsigned char controlSignals, int result)
 {
     printf("\nAccumulator = ");
-    if(controlSignals == 0x03)
-        printBin(result, 0x10);
-    else
-        printBin(result, 0x08);
+    printBin(result, 0x10);
     printFlags();
     printf("\n==============================================");
 }
 
-void printFlags() 
+void printFlags()
 {
     printf("\nZF=%d, CF=%d, SF=%d, OF=%d", ZF, CF, SF, OF);
 }
