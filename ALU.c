@@ -213,7 +213,7 @@ int multiplication(unsigned char operand1, unsigned char operand2, unsigned char
         A = A | (MSB_A << 7); // Either Shift 1 or 0 to the MSB of A
     }
 
-    unsigned short int ACC = (A << 8) | Q;
+    unsigned short int ACC = (A << 9) | (Q << 1);
     return ACC;
 }
 
@@ -273,18 +273,10 @@ int ALU(unsigned char operand1, unsigned char operand2, unsigned char control_si
 
 void printBin(int data, unsigned char data_width)
 {
-    unsigned long sum = 0;
-    unsigned long power = 1;
-    while (data)
+    for (int x = (int) data_width - 1; x >= 0; --x)
     {
-        if (data & 1)
-        {
-            sum += power;
-        }
-        power *= 10;
-        data /= 2;
+        putchar((data & (1 << x)) ? '1' : '0');
     }
-    printf("%0*lu", data_width, sum);
 }
 
 void printOperands(unsigned char operand1, unsigned char operand2, unsigned char controlSignals)
@@ -299,7 +291,7 @@ void printOperands(unsigned char operand1, unsigned char operand2, unsigned char
     printBin((int)operand1, 0x08);
     delay(y);
 
-    printf("\nOP2  = ");
+    printf("\nOP2 = ");
     printBin((int)operand2, 0x08);
     delay(y);
 
@@ -313,7 +305,10 @@ void printOperands(unsigned char operand1, unsigned char operand2, unsigned char
 void outputDisplay(unsigned char controlSignals, int result)
 {
     printf("\nAccumulator = ");
-    printBin(result, 0x10);
+    if(controlSignals == 0x03)
+        printBin(result, 0x10);
+    else 
+        printBin(result, 0x08);
     printFlags();
     printf("\n==============================================");
 }
