@@ -176,7 +176,7 @@ int subtraction(unsigned char op1, unsigned char op2)
 int multiplication(unsigned char operand1, unsigned char operand2, unsigned char control_signals)
 {
     unsigned char Qn1 = 0x00;   // least significant bit Qn+1
-    unsigned char A = 0x00;     // Multipicand - A
+    unsigned char A = 0x00;     // Multiplicand - A
     unsigned char Q = operand2; // Q
 
     printf("\n    A        Q    Qn1     M    n\n");
