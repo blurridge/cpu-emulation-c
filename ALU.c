@@ -1,3 +1,11 @@
+/*============================================================================================================
+FILENAME        :ALU.c
+DESCRIPTION     :Create a program that will display the 1-N value of the Fibonacci sequence. Use a space for 
+                the spacing between numbers horizontally.
+AUTHOR          :Zach Riane I. Machacon, Eldridge Aaron S. Miole, Dave Nelson F. Ogue, John Jason C. Zamora
+CREATED ON      :27 February 2024
+============================================================================================================*/
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdbool.h>
