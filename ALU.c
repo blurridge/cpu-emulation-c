@@ -1,7 +1,7 @@
 /*============================================================================================================
 FILENAME        :ALU.c
-DESCRIPTION     :Create a program that will display the 1-N value of the Fibonacci sequence. Use a space for 
-                the spacing between numbers horizontally.
+DESCRIPTION     :Create a program that will emulate the arithmetic and logical operations that performs 
+                based on the arithmetic concepts discussed in Unit II.
 AUTHOR          :Zach Riane I. Machacon, Eldridge Aaron S. Miole, Dave Nelson F. Ogue, John Jason C. Zamora
 CREATED ON      :27 February 2024
 ============================================================================================================*/
