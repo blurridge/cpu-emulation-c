@@ -2,7 +2,7 @@
 FILENAME        :CU.c
 DESCRIPTION     :Emulate the function of a control unit using C/ C++ program
 AUTHOR          :Zach Riane I. Machacon, Eldridge Aaron S. Miole, Dave Nelson F. Ogue, John Jason C. Zamora
-CREATED ON      :27 February 2024
+CREATED ON      :18 March 2024
 ============================================================================================================*/
 
 #include <stdio.h>
