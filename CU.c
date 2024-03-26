@@ -36,6 +36,7 @@ int CU(void)
     unsigned short dataMemoryStart = 0x400;
 
     PC = progMemoryStart;
+    printf("Initializing Main Memory...\n");
     while (inst_code != 0x1F)
     {
         // Fetching upper byte
@@ -82,8 +83,21 @@ int CU(void)
         { // write data to IOBR (WIB)
             IO_BR = operand & 0x0F;
         }
+        else if (inst_code == 0x08)
+        { // write data to IOBR (WIB)
+            IO_BR = operand & 0x0F;
+        }       
         else if (inst_code == 0x1F)
         { // end of program (EOP)
+            printf("***********************************************\n");
+            printf("PC \t \t: 0x%03x\n", PC);
+            printf("Fetching instruction...\n");
+            printf("IR \t \t: 0x%x\n", IR);
+            printf("Instruction Code: 0x%x\n", inst_code);
+            printf("Operand \t: 0x%x\n", operand);
+            printf("Instruction\t: EOP\n");
+            printf("END OF PROGRAM\n");
+            printf("***********************************************\n");
             return 1;
         }
         else
@@ -92,6 +106,7 @@ int CU(void)
         }
         outputDisplay(PC, IR, inst_code, operand, MBR, IO_BR);
     }
+
 }
 
 void initMemory()
@@ -116,11 +131,11 @@ void initMemory()
 void outputDisplay(unsigned short PC, unsigned short IR, unsigned short inst_code, unsigned short operand, unsigned short MBR, unsigned short IOBR)
 {
     printf("***********************************************\n");
-    printf("PC \t \t: 0x%x\n", PC);
+    printf("PC \t \t: 0x%03x\n", PC);
     printf("Fetching instruction...\n");
     printf("IR \t \t: 0x%x\n", IR);
-    printf("Instruction Code: 0x%x\n", inst_code);
-    printf("Operand \t: 0x%x\n", operand);
+    printf("Instruction Code: 0x%02x\n", inst_code);
+    printf("Operand \t: 0x%03x\n", operand);
     if (inst_code == 0x01)
     {
         printf("Instruction \t: WM\n");
@@ -134,6 +149,26 @@ void outputDisplay(unsigned short PC, unsigned short IR, unsigned short inst_cod
     }
     else if (inst_code == 0x03)
     {
+        printf("Instruction\t: Branch\n");
+        printf("Branching to 0x%x on the next cycle.\n", operand);
     }
+    else if (inst_code == 0x07)
+    {
+        printf("Instruction\t: WIB\n");
+        printf("Loading data to IOBR...\n");
+        printf("IOBR \t\t: 0x%x\n", IOBR);
+    }
+    else if (inst_code == 0x05)
+    {  
+        printf("Instruction\t: WIO\n");
+        printf("Writing to IO Buffer...\n");
+    }
+    else if (inst_code == 0x06)
+    {
+        printf("Instruction\t: WB\n");
+        printf("Loading data to MBR...\n");
+        printf("MBR\t\t: 0x%02x\n", MBR); 
+    }
+
     printf("***********************************************\n");
 }
