@@ -131,7 +131,7 @@ void initMemory()
 void outputDisplay(unsigned short PC, unsigned short IR, unsigned short inst_code, unsigned short operand, unsigned short MBR, unsigned short IOBR)
 {
     printf("***********************************************\n");
-    printf("PC \t \t: 0x%03x\n", PC);
+    printf("PC \t \t: 0x%03x\n", PC - 2);
     printf("Fetching instruction...\n");
     printf("IR \t \t: 0x%x\n", IR);
     printf("Instruction Code: 0x%02x\n", inst_code);
