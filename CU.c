@@ -14,9 +14,10 @@ unsigned char ioBuffer[32];
 
 int CU();
 void initMemory();
-void outputDisplay(unsigned short PC, unsigned short IR, unsigned short inst_code, unsigned short operand, unsigned short MBR, unsigned short IOBR);
+void outputPC(unsigned short PC);
+void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short operand, unsigned short MBR, unsigned short IOBR);
 
-void main()
+int main()
 {
     initMemory();
     if (CU() == 1)
@@ -51,6 +52,8 @@ int CU(void)
         inst_code = IR >> 11;  // Gets upper 5 bits for instruction
         operand = IR & 0x07FF; // Gets lower 11 bits for operand
 
+        outputPC(PC);
+
         if (inst_code == 0x01)
         { // Write to memory (WM)
             MAR = operand;
@@ -77,36 +80,23 @@ int CU(void)
         }
         else if (inst_code == 0x06)
         { // write data to MBR (WB)
-            MBR = operand & 0x0F;
+            MBR = operand & 0xFF;
         }
         else if (inst_code == 0x07)
         { // write data to IOBR (WIB)
-            IO_BR = operand & 0x0F;
+            IO_BR = operand & 0xFF;
         }
         else if (inst_code == 0x08)
         { // write data to IOBR (WIB)
-            IO_BR = operand & 0x0F;
+            IO_BR = operand & 0xFF;
         }       
-        else if (inst_code == 0x1F)
-        { // end of program (EOP)
-            printf("***********************************************\n");
-            printf("PC \t \t: 0x%03x\n", PC);
-            printf("Fetching instruction...\n");
-            printf("IR \t \t: 0x%x\n", IR);
-            printf("Instruction Code: 0x%x\n", inst_code);
-            printf("Operand \t: 0x%x\n", operand);
-            printf("Instruction\t: EOP\n");
-            printf("END OF PROGRAM\n");
-            printf("***********************************************\n");
-            return 1;
-        }
-        else
+        else if(inst_code != 0x1F)
         {
             return 0;
         }
-        outputDisplay(PC, IR, inst_code, operand, MBR, IO_BR);
+        outputDisplay(IR, inst_code, operand, MBR, IO_BR);
     }
-
+    return 1;
 }
 
 void initMemory()
@@ -128,14 +118,17 @@ void initMemory()
     dataMemory[0x12F] = 0x00;
 }
 
-void outputDisplay(unsigned short PC, unsigned short IR, unsigned short inst_code, unsigned short operand, unsigned short MBR, unsigned short IOBR)
-{
+void outputPC(unsigned short PC) {
     printf("***********************************************\n");
-    printf("PC \t \t: 0x%03x\n", PC - 2);
+    printf("PC \t \t: 0x%03X\n", PC - 2);
     printf("Fetching instruction...\n");
-    printf("IR \t \t: 0x%x\n", IR);
-    printf("Instruction Code: 0x%02x\n", inst_code);
-    printf("Operand \t: 0x%03x\n", operand);
+}
+
+void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short operand, unsigned short MBR, unsigned short IOBR)
+{
+    printf("IR \t \t: 0x%X\n", IR);
+    printf("Instruction Code: 0x%02X\n", inst_code);
+    printf("Operand \t: 0x%03X\n", operand);
     if (inst_code == 0x01)
     {
         printf("Instruction \t: WM\n");
@@ -145,18 +138,18 @@ void outputDisplay(unsigned short PC, unsigned short IR, unsigned short inst_cod
     {
         printf("Instruction \t: RM\n");
         printf("Reading data from memory...\n");
-        printf("MBR \t\t: 0x%x\n", MBR);
+        printf("MBR \t\t: 0x%02X\n", MBR);
     }
     else if (inst_code == 0x03)
     {
-        printf("Instruction\t: Branch\n");
-        printf("Branching to 0x%x on the next cycle.\n", operand);
+        printf("Instruction\t: BR\n");
+        printf("Branching to 0x%X on the next cycle.\n", operand);
     }
     else if (inst_code == 0x07)
     {
         printf("Instruction\t: WIB\n");
         printf("Loading data to IOBR...\n");
-        printf("IOBR \t\t: 0x%x\n", IOBR);
+        printf("IOBR \t\t: 0x%02X\n", IOBR);
     }
     else if (inst_code == 0x05)
     {  
@@ -167,8 +160,11 @@ void outputDisplay(unsigned short PC, unsigned short IR, unsigned short inst_cod
     {
         printf("Instruction\t: WB\n");
         printf("Loading data to MBR...\n");
-        printf("MBR\t\t: 0x%02x\n", MBR); 
+        printf("MBR\t\t: 0x%02X\n", MBR); 
     }
-
-    printf("***********************************************\n");
+    else if (inst_code == 0x1F) 
+    {
+        printf("Instruction\t: EOP\n");
+        printf("End of program.\n\n");
+    }
 }
