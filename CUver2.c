@@ -1,7 +1,7 @@
 /*============================================================================================================
 FILENAME        :CUver2.c
-DESCRIPTION     :Modify the Control Unit (CU) on the previous exercise to include the data bus (instruction 
-                and data), address bus and control bus (lines). Refer to the TRACS document for the 
+DESCRIPTION     :Modify the Control Unit (CU) on the previous exercise to include the data bus (instruction
+                and data), address bus and control bus (lines). Refer to the TRACS document for the
                 architecture and bus connections.
 AUTHOR          :Zach Riane I. Machacon, Eldridge Aaron S. Miole, Dave Nelson F. Ogue, John Jason C. Zamora
 CREATED ON      :18 March 2024
@@ -19,7 +19,9 @@ void initMemory();
 void MainMemory();
 void IOMemory();
 void outputPC(unsigned short PC);
-void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short operand, unsigned short MBR, unsigned short IOBR);
+void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short operand, unsigned short MBR,
+                   unsigned char BUS, unsigned short ADDR, unsigned short MAR, unsigned short IO_AR, unsigned char IO, unsigned short IO_BR, unsigned char FETCH, unsigned char MEMORY,
+                   unsigned char CONTROL, int IOM, int RW, int OE);
 int CU();
 
 int main()
@@ -39,7 +41,7 @@ int main()
 
 int CU(void)
 {
-    unsigned short operand, IR, PC, MAR, MBR, IO_AR, IO_BR, inst_code;
+    unsigned short operand, IR, PC, MAR = 0, MBR, IO_AR, IO_BR, inst_code;
     unsigned char progMemoryStart = 0x000;
     unsigned short dataMemoryStart = 0x400;
     unsigned char FETCH, IO, MEMORY;
@@ -63,8 +65,9 @@ int CU(void)
         ADDR = PC;
         MainMemory();
 
-        if(FETCH == 1) {
-            IR = (int) BUS;
+        if (FETCH == 1)
+        {
+            IR = (int)BUS;
             IR = IR << 8;
             PC++;
             ADDR = PC;
@@ -72,7 +75,8 @@ int CU(void)
 
         MainMemory();
         // Fetching lower byte
-        if(FETCH == 1) {
+        if (FETCH == 1)
+        {
             IR = IR | BUS;
             PC++;
         }
@@ -83,22 +87,23 @@ int CU(void)
         outputPC(PC);
 
         if (inst_code == 0x01)
-        { // Write to memory (WM)
-            MAR = operand;          // Sets operand to MAR
-            FETCH = 0;              // Fetch set to 0 since execution loop  
-            MEMORY = 1;             // MEMORY is 1 since it deals with main memory
-            IO = 0;                 // IO set to 0 since it does not deal with IO
+        {                  // Write to memory (WM)
+            MAR = operand; // Sets operand to MAR
+            FETCH = 0;     // Fetch set to 0 since execution loop
+            MEMORY = 1;    // MEMORY is 1 since it deals with main memory
+            IO = 0;        // IO set to 0 since it does not deal with IO
 
             CONTROL = inst_code;
-            IOM = 1;                // IOM at 1 means that we're accessing main memory
-            RW = 1;                 // RW at 1 means it is write operation
-            OE = 1;                 // OE at 1 means that data movement is allowed
+            IOM = 1; // IOM at 1 means that we're accessing main memory
+            RW = 1;  // RW at 1 means it is write operation
+            OE = 1;  // OE at 1 means that data movement is allowed
 
-            ADDR = MAR;             // set ADDR to MAR
-            if(MEMORY) {            // If MEMORY is being accessed,
-                BUS = MBR;          // Set BUS to MBR
+            ADDR = MAR; // set ADDR to MAR
+            if (MEMORY)
+            {              // If MEMORY is being accessed,
+                BUS = MBR; // Set BUS to MBR
             }
-            MainMemory();           // Run MainMemory
+            MainMemory(); // Run MainMemory
         }
         else if (inst_code == 0x02)
         { // Read from Memory (RM)
@@ -112,15 +117,18 @@ int CU(void)
             RW = 0;
             OE = 1;
 
-            ADDR = MAR;         // sets ADDR to MAR
-            MainMemory();       // However, MainMemory is ran first in order to move from memory -> bus
-            if(MEMORY) {
+            ADDR = MAR;   // sets ADDR to MAR
+            MainMemory(); // However, MainMemory is ran first in order to move from memory -> bus
+            if (MEMORY)
+            {
                 MBR = BUS;
             }
         }
         else if (inst_code == 0x03)
         { // branch (BR)
+            CONTROL = inst_code;
             PC = operand;
+            OE = 0; // tells the main memory to be locked as it does not require read/write
         }
         else if (inst_code == 0x04)
         { // read from IO buffer (RIO)
@@ -130,13 +138,14 @@ int CU(void)
             IO = 1;
 
             CONTROL = inst_code;
-            IOM = 0;                // IOM set to 0 since we're accessing IO Memory
+            IOM = 0; // IOM set to 0 since we're accessing IO Memory
             RW = 0;
             OE = 1;
 
             ADDR = IO_AR;
             IOMemory();
-            if(IO) {
+            if (IO)
+            {
                 IO_BR = BUS;
             }
         }
@@ -156,28 +165,37 @@ int CU(void)
             OE = 1;
 
             ADDR = IO_AR;
-            if(IO) {
+            if (IO)
+            {
                 BUS = IO_BR;
             }
             IOMemory();
         }
         else if (inst_code == 0x06)
         { // write data to MBR (WB)
+            CONTROL = inst_code;
             MBR = operand & 0xFF;
+            OE = 0;
         }
         else if (inst_code == 0x07)
         { // write data to IOBR (WIB)
+            CONTROL = inst_code;
             IO_BR = operand & 0xFF;
+            OE = 0;
         }
         else if (inst_code == 0x08)
         { // write data to IOBR (WIB)
+            CONTROL = inst_code;
             IO_BR = operand & 0xFF;
-        }       
-        else if(inst_code != 0x1F)
+            OE = 0;
+        }
+        else if (inst_code != 0x1F)
         {
             return 0;
         }
-        outputDisplay(IR, inst_code, operand, MBR, IO_BR);
+        outputDisplay(IR, inst_code, operand, MBR,
+                      BUS, ADDR, MAR, IO_AR, IO, IO_BR, FETCH, MEMORY,
+                      CONTROL, IOM, RW, OE);
     }
     return 1;
 }
@@ -201,14 +219,35 @@ void initMemory()
     dataMemory[0x12F] = 0x00;
 }
 
-void outputPC(unsigned short PC) {
+void outputPC(unsigned short PC)
+{
     printf("***********************************************\n");
     printf("PC \t \t: 0x%03X\n", PC - 2);
     printf("Fetching instruction...\n");
 }
 
-void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short operand, unsigned short MBR, unsigned short IOBR)
+void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short operand, unsigned short MBR,
+                   unsigned char BUS, unsigned short ADDR, unsigned short MAR, unsigned short IO_AR, unsigned char IO, unsigned short IO_BR, unsigned char FETCH, unsigned char MEMORY,
+                   unsigned char CONTROL, int IOM, int RW, int OE)
 {
+
+    printf("Address BUS\t: 0x%03X\n", ADDR);
+    printf("DATA BUS\t: 0x%02X\n\n", BUS);
+    printf("MAR \t\t: 0x%X\n", MAR);
+    printf("IO_AR \t\t: 0x%02X\n", IO_AR);
+    printf("IO_BR \t\t: 0x%02X\n\n", IO_BR);
+
+    printf("Local Control Signals\n");
+    printf("FETCH \t\t: %i\n", FETCH);
+    printf("IO \t\t: %i\n", IO);
+    printf("MEMORY \t\t: %i\n\n", MEMORY);
+
+    printf("External Control Signals\n");
+    printf("Control Signals : 0x%02X\n", CONTROL);
+    printf("IO/M \t\t: %i\n", IOM);
+    printf("R/W \t\t: %i\n", RW);
+    printf("OE  \t\t: %i\n\n", OE);
+
     printf("IR \t \t: 0x%X\n", IR);
     printf("Instruction Code: 0x%02X\n", inst_code);
     printf("Operand \t: 0x%03X\n", operand);
@@ -232,10 +271,10 @@ void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short o
     {
         printf("Instruction\t: WIB\n");
         printf("Loading data to IOBR...\n");
-        printf("IOBR \t\t: 0x%02X\n", IOBR);
+        printf("IOBR \t\t: 0x%02X\n", IO_BR);
     }
     else if (inst_code == 0x05)
-    {  
+    {
         printf("Instruction\t: WIO\n");
         printf("Writing to IO Buffer...\n");
     }
@@ -243,32 +282,40 @@ void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short o
     {
         printf("Instruction\t: WB\n");
         printf("Loading data to MBR...\n");
-        printf("MBR\t\t: 0x%02X\n", MBR); 
+        printf("MBR\t\t: 0x%02X\n", MBR);
     }
-    else if (inst_code == 0x1F) 
+    else if (inst_code == 0x1F)
     {
         printf("Instruction\t: EOP\n");
         printf("End of program.\n\n");
     }
 }
 
-void MainMemory() {
-    if(IOM == 1) {
-        if(RW == 0 && OE == 1) {
+void MainMemory()
+{
+    if (IOM == 1)
+    {
+        if (RW == 0 && OE == 1)
+        {
             BUS = dataMemory[ADDR];
         }
-        else if(RW == 1 && OE == 1) {
+        else if (RW == 1 && OE == 1)
+        {
             dataMemory[ADDR] = BUS;
         }
     }
 }
 
-void IOMemory() {
-    if(IOM == 0) {
-        if(RW == 0 && OE == 1) {
+void IOMemory()
+{
+    if (IOM == 0)
+    {
+        if (RW == 0 && OE == 1)
+        {
             BUS = ioBuffer[ADDR];
         }
-        else if(RW == 1 && OE == 1) {
+        else if (RW == 1 && OE == 1)
+        {
             ioBuffer[ADDR] = BUS;
         }
     }
