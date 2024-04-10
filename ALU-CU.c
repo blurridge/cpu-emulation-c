@@ -52,12 +52,19 @@ void printBin(int data, unsigned char data_width)
     }
 }
 
+void printACC(int ACC)
+{
+    printf("ACC: ");
+    printBin((int)ACC, 16);
+    printf("\n");
+}
+
 int ALU(void)
 {
     static int ACC = 0x0000;
     unsigned char temp_OP2;
     unsigned int temp_ACC;
-
+    printf("=============================== ALU ===============================");
     if (CONTROL == 0x1E || CONTROL == 0x1D) // 1E ADD, 1D SUB
     {
         if (CONTROL == 0x1D)
@@ -70,48 +77,65 @@ int ALU(void)
         }
         temp_ACC = (int)ACC + temp_OP2;
         ACC = (unsigned char)temp_ACC;
+        printACC(ACC);
     }
     else if (CONTROL == 0x1B) // MULTIPLICATION
     {
         temp_OP2 = BUS;
         temp_ACC = (int)ACC * temp_OP2;
         ACC = (unsigned char)temp_ACC;
+        printACC(ACC);
     }
     else if (CONTROL == 0x1A) // AND OPERATION
     {
         temp_OP2 = BUS;
         ACC = ACC & temp_OP2;
+        printACC(ACC);
     }
     else if (CONTROL == 0x19) // OR OPERATION
     {
         temp_OP2 = BUS;
         ACC = ACC | temp_OP2;
+        printACC(ACC);
     }
     else if (CONTROL == 0x18) // NOT OPERATION
     {
         ACC = ~ACC;
+        printACC(ACC);
     }
     else if (CONTROL == 0x17) // XOR OPERATION
     {
         temp_OP2 = BUS;
         ACC = ACC ^ temp_OP2;
+        printACC(ACC);
     }
     else if (CONTROL == 0x16) // SHL OPERATION
     {
         temp_OP2 = BUS;
         ACC = ACC >> temp_OP2;
+        printACC(ACC);
     }
     else if (CONTROL == 0x15) // SHR OPERATION
     {
         temp_OP2 = BUS;
         ACC = ACC << temp_OP2;
+        printACC(ACC);
     }
-
-    printf("ACC: ")
-        printBin((int)ACC, 16)
-            printf("\n");
-
+    else if (CONTROL == 0x09) // WACC OPERATION
+    {
+        ACC = BUS;
+    }
+    else if (CONTROL == 0x0B) // RACC OPERATION
+    {
+        BUS = ACC;
+    }
+    else
+    {
+        printf("Error!");
+    }
+    printf("===================================================================");
     setFlags((int)ACC);
+    return 0;
 }
 
 int CU(void)
