@@ -111,23 +111,25 @@ int ALU(void)
     }
     else if (CONTROL == 0x16) // SHL OPERATION
     {
-        temp_OP2 = BUS;
-        ACC = ACC >> temp_OP2;
+        ACC = ACC << 1;
         printACC(ACC);
     }
     else if (CONTROL == 0x15) // SHR OPERATION
     {
-        temp_OP2 = BUS;
-        ACC = ACC << temp_OP2;
+        ACC = ACC >> 1;
         printACC(ACC);
     }
     else if (CONTROL == 0x09) // WACC OPERATION
     {
         ACC = BUS;
+        printACC(ACC);
     }
     else if (CONTROL == 0x0B) // RACC OPERATION
     {
         BUS = ACC;
+        printf("BUS: ");
+        printBin((int)BUS, 16);
+        printf("\n");
     }
     else
     {
