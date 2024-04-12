@@ -23,6 +23,10 @@ void initMemory();
 void MainMemory();
 void IOMemory();
 void setFlags(int ACC);
+void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short operand, 
+unsigned short MBR,unsigned char BUS, unsigned short ADDR, unsigned short MAR, 
+unsigned short IO_AR, unsigned char IO, unsigned short IO_BR, unsigned char FETCH,
+unsigned char MEMORY, unsigned char CONTROL,int IOM,int RW,int OE);
 
 int main()
 {
@@ -288,6 +292,57 @@ int CU(void)
             IO_BR = operand & 0xFF;
             OE = 0;
         }
+        else if(inst_code == 0x1E)
+        {
+            CONTROL = inst_code;
+            ALU();
+        }
+        else if(inst_code == 0x1D)
+        {
+            CONTROL = inst_code;
+            ALU();
+        }
+        else if(inst_code == 0x1B)
+        {
+            CONTROL = inst_code;
+            ALU();
+            
+        }
+        else if(inst_code == 0x1A)
+        {
+            CONTROL = inst_code;
+            ALU();
+        }
+        else if(inst_code == 0x19)
+        {
+            CONTROL = inst_code;
+            ALU();
+            
+        }
+        else if(inst_code == 0x18)
+        {
+            CONTROL = inst_code;
+            ALU();
+            
+        }
+        else if(inst_code == 0x17)
+        {
+            CONTROL = inst_code;
+            ALU();
+            
+        }
+        else if(inst_code == 0x16)
+        {
+            CONTROL = inst_code;
+            ALU();
+            
+        }
+        else if(inst_code == 0x15)
+        {
+            CONTROL = inst_code;
+            ALU();
+            
+        }
         else if (inst_code != 0x1F)
         {
             return 0;
@@ -326,6 +381,71 @@ void IOMemory()
         {
             ioBuffer[ADDR] = BUS;
         }
+    }
+}
+
+void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short operand, unsigned short MBR,
+                   unsigned char BUS, unsigned short ADDR, unsigned short MAR, unsigned short IO_AR, unsigned char IO, unsigned short IO_BR, unsigned char FETCH, unsigned char MEMORY,
+                   unsigned char CONTROL, int IOM, int RW, int OE)
+{
+
+    printf("Address BUS\t: 0x%03X\n", ADDR);
+    printf("DATA BUS\t: 0x%02X\n\n", BUS);
+    printf("MAR \t\t: 0x%X\n", MAR);
+    printf("IO_AR \t\t: 0x%02X\n", IO_AR);
+    printf("IO_BR \t\t: 0x%02X\n\n", IO_BR);
+
+    printf("Local Control Signals\n");
+    printf("FETCH \t\t: %i\n", FETCH);
+    printf("IO \t\t: %i\n", IO);
+    printf("MEMORY \t\t: %i\n\n", MEMORY);
+
+    printf("External Control Signals\n");
+    printf("Control Signals : 0x%02X\n", CONTROL);
+    printf("IO/M \t\t: %i\n", IOM);
+    printf("R/W \t\t: %i\n", RW);
+    printf("OE  \t\t: %i\n\n", OE);
+
+    printf("IR \t \t: 0x%X\n", IR);
+    printf("Instruction Code: 0x%02X\n", inst_code);
+    printf("Operand \t: 0x%03X\n", operand);
+    if (inst_code == 0x01)
+    {
+        printf("Instruction \t: WM\n");
+        printf("Writing data to memory...\n");
+    }
+    else if (inst_code == 0x02)
+    {
+        printf("Instruction \t: RM\n");
+        printf("Reading data from memory...\n");
+        printf("MBR \t\t: 0x%02X\n", MBR);
+    }
+    else if (inst_code == 0x03)
+    {
+        printf("Instruction\t: BR\n");
+        printf("Branching to 0x%X on the next cycle.\n", operand);
+    }
+    else if (inst_code == 0x07)
+    {
+        printf("Instruction\t: WIB\n");
+        printf("Loading data to IOBR...\n");
+        printf("IOBR \t\t: 0x%02X\n", IO_BR);
+    }
+    else if (inst_code == 0x05)
+    {
+        printf("Instruction\t: WIO\n");
+        printf("Writing to IO Buffer...\n");
+    }
+    else if (inst_code == 0x06)
+    {
+        printf("Instruction\t: WB\n");
+        printf("Loading data to MBR...\n");
+        printf("MBR\t\t: 0x%02X\n", MBR);
+    }
+    else if (inst_code == 0x1F)
+    {
+        printf("Instruction\t: EOP\n");
+        printf("End of program.\n\n");
     }
 }
 
@@ -690,3 +810,4 @@ void initMemory(void)
     BUS = 0x00;
     MainMemory();
 }
+
