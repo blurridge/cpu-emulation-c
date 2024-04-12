@@ -135,6 +135,32 @@ int ALU(void)
         printBin((int)BUS, 16);
         printf("\n");
     }
+    else if (CONTROL == 0x11)
+    {
+        if(ACC < BUS)
+            ACC = BUS;
+        printACC(ACC);
+    }
+    else if (CONTROL == 0x12)
+    {
+        if(ACC > BUS)
+            ACC = BUS;
+        printACC(ACC);
+    }
+    else if (CONTROL == 0x13)
+    {
+        if(ACC != BUS)
+            ACC = BUS;
+        printACC(ACC);
+
+    }
+    else if (CONTROL == 0x14)
+    {
+        if(ACC == BUS)
+            ACC = BUS;
+        printACC(ACC);
+
+    }
     else
     {
         printf("Error!");
@@ -150,6 +176,7 @@ int CU(void)
     unsigned char progMemoryStart = 0x000;
     unsigned short dataMemoryStart = 0x400;
     unsigned char FETCH, IO, MEMORY;
+    int temp = 0;
 
     PC = progMemoryStart;
     printf("Initializing Main Memory...\n");
@@ -295,61 +322,59 @@ int CU(void)
         else if(inst_code == 0x1E)
         {
             CONTROL = inst_code;
-            ALU();
+            temp = ALU();
         }
         else if(inst_code == 0x1D)
         {
             CONTROL = inst_code;
-            ALU();
+            temp = ALU();
         }
         else if(inst_code == 0x1B)
         {
             CONTROL = inst_code;
-            ALU();
+            temp = ALU();
             
         }
         else if(inst_code == 0x1A)
         {
             CONTROL = inst_code;
-            ALU();
+            temp = ALU();
         }
         else if(inst_code == 0x19)
         {
             CONTROL = inst_code;
-            ALU();
+            temp = ALU();
             
         }
         else if(inst_code == 0x18)
         {
             CONTROL = inst_code;
-            ALU();
+            temp = ALU();
             
         }
         else if(inst_code == 0x17)
         {
             CONTROL = inst_code;
-            ALU();
+            temp = ALU();
             
         }
         else if(inst_code == 0x16)
         {
             CONTROL = inst_code;
-            ALU();
+            temp = ALU();
             
         }
         else if(inst_code == 0x15)
         {
             CONTROL = inst_code;
-            ALU();
+            temp = ALU();
             
         }
         else if (inst_code != 0x1F)
         {
             return 0;
         }
-        outputDisplay(IR, inst_code, operand, MBR,
-                      BUS, ADDR, MAR, IO_AR, IO, IO_BR, FETCH, MEMORY,
-                      CONTROL, IOM, RW, OE);
+        outputDisplay(IR, inst_code, operand, MBR, BUS, ADDR, MAR, IO_AR, IO, IO_BR, FETCH, MEMORY, CONTROL, IOM, RW, OE);
     }
     return 1;
 }
