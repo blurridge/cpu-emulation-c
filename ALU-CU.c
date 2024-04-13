@@ -22,6 +22,7 @@ bool SF, OF, ZF, CF;
 unsigned char twosComp(unsigned char op);
 void printBin(int data, unsigned char data_width);
 int ALU(void);
+int multiplication(unsigned char operand1, unsigned char operand2, unsigned char control_signals);
 void initMemory();
 void MainMemory();
 void IOMemory();
@@ -64,11 +65,8 @@ void printBin(int data, unsigned char data_width)
 void printACC(int ACC)
 {
     printf("ACC: ");
-    printBin((int)ACC, 16);
+    printBin((int)ACC, 8);
     printFlags();
-    printf("\nACC: %i\n", ACC);
-    printf("\nACC: 0x%02X\n", ACC);
-    printf("\n");
 }
 
 int ALU(void)
@@ -76,8 +74,7 @@ int ALU(void)
     static int ACC = 0x0000;
     unsigned char temp_OP2;
     unsigned int temp_ACC;
-    printf("=============================== ALU ===============================\n");
-    printf("BUS------------>%02X\n", BUS);
+    printf("------------------------------- ALU -------------------------------\n");
     if (CONTROL == 0x1E || CONTROL == 0x1D) // 1E ADD, 1D SUB
     {
         if (CONTROL == 0x1D)
@@ -90,8 +87,7 @@ int ALU(void)
         }
         temp_ACC = (int)ACC + temp_OP2;
         ACC = (unsigned char)temp_ACC;
-        printBin(ACC, 16);
-        setFlags(ACC); // must put here to updata flags to update, CAREFULL!!! might be bugged if overflow for ADDITION!!!
+        setFlags(ACC);
         printACC(ACC);
     }
     else if (CONTROL == 0x1B) // MULTIPLICATION
@@ -139,7 +135,6 @@ int ALU(void)
     else if (CONTROL == 0x09) // WACC OPERATION
     {
         ACC = BUS;
-
         printACC(ACC);
     }
     else if (CONTROL == 0x0B) // RACC OPERATION
@@ -148,6 +143,7 @@ int ALU(void)
         printf("BUS: ");
         printBin((int)BUS, 16);
         printf("\n");
+        print("ACC\t\t: 0x%02X", ACC);
     }
     else if (CONTROL == 0x11) // BRLT OPERATION
     {
@@ -155,41 +151,40 @@ int ALU(void)
         temp_ACC = (int)ACC + temp_OP2;
         setFlags(temp_ACC);
         ACC = (unsigned char)temp_ACC;
-        printBin(temp_ACC, 16);
         printACC(ACC);
+        print("ACC\t\t: 0x%02X", ACC);
     }
     else if (CONTROL == 0x12) // BRGT OPERATION
     {
         temp_OP2 = twosComp(BUS);
         temp_ACC = (int)ACC + temp_OP2;
         ACC = (unsigned char)temp_ACC;
-        printBin(ACC, 16);
         setFlags(ACC);
         printACC(ACC);
+        print("ACC\t\t: 0x%02X", ACC);
     }
     else if (CONTROL == 0x13) // BRNE OPERATION
     {
         temp_OP2 = twosComp(BUS);
         temp_ACC = (int)ACC + temp_OP2;
         ACC = (unsigned char)temp_ACC;
-        printBin(ACC, 16);
         setFlags(ACC);
         printACC(ACC);
+        print("ACC\t\t: 0x%02X", ACC);
     }
     else if (CONTROL == 0x14) // BRE OPERATION
     {
         temp_OP2 = twosComp(BUS);
         temp_ACC = (int)ACC + temp_OP2;
         ACC = (unsigned char)temp_ACC;
-        printBin(ACC, 16);
         setFlags(ACC);
         printACC(ACC);
+        print("ACC\t\t: 0x%02X", ACC);
     }
     else
     {
         printf("Error!");
     }
-    printf("===================================================================\n");
     return 0;
 }
 
@@ -227,19 +222,16 @@ int CU(void)
             PC++;
             ADDR = PC;
         }
-        printf("PC      ===== 0x%i\n", PC);     // REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!
-        printf("ADDR    ===== 0x%04X\n", ADDR); // REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!
         MainMemory();
+
         // Fetching lower byte
         if (FETCH == 1)
         {
             IR = IR | BUS;
             PC++;
         }
-        printf("PC      ===== 0x%i\n", PC);     // REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!
-        printf("ADDR    ===== 0x%04X\n", ADDR); // REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!
-        inst_code = IR >> 11;                   // Gets upper 5 bits for instruction
-        operand = IR & 0x07FF;                  // Gets lower 11 bits for operand
+        inst_code = IR >> 11;  // Gets upper 5 bits for instruction
+        operand = IR & 0x07FF; // Gets lower 11 bits for operand
 
         if (inst_code == 0x01)
         {                  // Write to memory (WM)
@@ -258,8 +250,7 @@ int CU(void)
             {              // If MEMORY is being accessed,
                 BUS = MBR; // Set BUS to MBR
             }
-            MainMemory();                                     // Run MainMemory
-            printf("Data Memory = 0x%02X", dataMemory[ADDR]); // REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!
+            MainMemory(); // Run MainMemory
         }
         else if (inst_code == 0x02)
         { // Read from Memory (RM)
@@ -327,7 +318,6 @@ int CU(void)
                 BUS = IO_BR;
             }
             IOMemory();
-            printf("I/O Memory = 0x%02X\n", ioBuffer[ADDR]); // REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!
         }
         else if (inst_code == 0x06)
         { // write data to MBR (WB)
@@ -520,11 +510,11 @@ void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short o
                    unsigned short IO_AR, unsigned char IO, unsigned short IO_BR, unsigned char FETCH,
                    unsigned char MEMORY, unsigned char CONTROL, int IOM, int RW, int OE)
 {
-    printf("MBR = %02X\n\n", MBR);
-
+    printf("===================================================================\n");
     printf("Address BUS\t: 0x%04X\n", ADDR);
     printf("DATA BUS\t: 0x%02X\n\n", BUS);
     printf("MAR \t\t: 0x%04X\n", MAR);
+    printf("MBR = %02X\n", MBR);
     printf("IO_AR \t\t: 0x%02X\n", IO_AR);
     printf("IO_BR \t\t: 0x%02X\n\n", IO_BR);
 
@@ -581,11 +571,88 @@ void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short o
         printf("Instruction\t: EOP\n");
         printf("End of program.\n\n");
     }
+    else if (inst_code == 0x1E)
+    {
+        printf("Instruction\t: ADD\n");
+        printf("Added BUS to ACC...\n");
+    }
+    else if (inst_code == 0x1D)
+    {
+        printf("Instruction\t: SUB\n");
+        printf("Subtracted ACC from BUS...\n");
+    }
+    else if (inst_code == 0x1B)
+    {
+        printf("Instruction\t: MUL\n");
+        printf("Multiplied ACC from BUS...\n");
+    }
+    else if (inst_code == 0x1A)
+    {
+        printf("Instruction\t: AND\n");
+        printf("AND Operation for ACC and BUS...\n");
+    }
+    else if (inst_code == 0x19)
+    {
+        printf("Instruction\t: OR\n");
+        printf("OR Operation for ACC and BUS...\n");
+    }
+    else if (inst_code == 0x18)
+    {
+        printf("Instruction\t: NOT\n");
+        printf("NOT Operation of ACC...\n");
+    }
+    else if (inst_code == 0x17)
+    {
+        printf("Instruction\t: XOR\n");
+        printf("XOR Operation of ACC and BUS...\n");
+    }
+    else if (inst_code == 0x16)
+    {
+        printf("Instruction\t: SHL\n");
+        printf("Shift left ACC by 1...\n");
+    }
+    else if (inst_code == 0x15)
+    {
+        printf("Instruction\t: SHR\n");
+        printf("Shift right ACC by 1...\n");
+    }
+    else if (inst_code == 0x0B)
+    {
+        printf("Instruction\t: RACC\n");
+        printf("Read ACC to BUS...\n");
+    }
+    else if (inst_code == 0x0E)
+    {
+        printf("Instruction\t: SWAP\n");
+        printf("Swap data of MBR and IOBR...\n");
+    }
+    else if (inst_code == 0x14)
+    {
+        printf("Instruction\t: BRE\n");
+        printf("ACC and BUS equal, branching to address...\n");
+    }
+    else if (inst_code == 0x13)
+    {
+        printf("Instruction\t: BRNE\n");
+        printf("ACC and BUS not equal, branching to address...\n");
+    }
+    else if (inst_code == 0x12)
+    {
+        printf("Instruction\t: BRGT\n");
+        printf("ACC greater than BUS, branching to address...\n");
+    }
+    else if (inst_code == 0x11)
+    {
+        printf("Instruction\t: BRLT\n");
+        printf("ACC lesser than BUS, branching to address...\n");
+    }
+    else if (inst_code == 0x09)
+    {
+        printf("Instruction\t: WACC\n");
+        printf("Writing data on BUS to ACC...\n");
+    }
 
-    // DISPLAY OTHER INSTRUCTIONS
-    // Add other instructions like ADD, MUL, SUB, and etc.
-
-    printf("============================================================\n\n");
+    printf("===================================================================\n\n");
 }
 
 void setFlags(unsigned int ACC)
@@ -626,7 +693,7 @@ void setFlags(unsigned int ACC)
 
 void printFlags()
 {
-    printf("\nZF=%d, CF=%d, SF=%d, OF=%d", ZF, CF, SF, OF);
+    printf("\nZF=%d, CF=%d, SF=%d, OF=%d\n", ZF, CF, SF, OF);
 }
 
 void initMemory(void)
