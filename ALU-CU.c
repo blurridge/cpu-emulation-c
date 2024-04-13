@@ -8,6 +8,7 @@ CREATED ON      :09 April 2024
 ============================================================================================================*/
 
 #include <stdio.h>
+#include <stdbool.h>
 
 unsigned char dataMemory[2048];
 unsigned char ioBuffer[32];
@@ -16,17 +17,21 @@ unsigned short ADDR;
 unsigned char BUS, CONTROL;
 int IOM = 0, RW = 0, OE = 0;
 
+bool SF, OF, ZF, CF;
+
 unsigned char twosComp(unsigned char op);
 void printBin(int data, unsigned char data_width);
 int ALU(void);
 void initMemory();
 void MainMemory();
 void IOMemory();
-void setFlags(int ACC);
-void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short operand, 
-unsigned short MBR,unsigned char BUS, unsigned short ADDR, unsigned short MAR, 
-unsigned short IO_AR, unsigned char IO, unsigned short IO_BR, unsigned char FETCH,
-unsigned char MEMORY, unsigned char CONTROL,int IOM,int RW,int OE);
+void setFlags(unsigned int ACC);
+void printFlags();
+void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short operand,
+                   unsigned short MBR, unsigned char BUS, unsigned short ADDR, unsigned short MAR,
+                   unsigned short IO_AR, unsigned char IO, unsigned short IO_BR, unsigned char FETCH,
+                   unsigned char MEMORY, unsigned char CONTROL, int IOM, int RW, int OE);
+int CU(void);
 
 int main()
 {
@@ -60,6 +65,9 @@ void printACC(int ACC)
 {
     printf("ACC: ");
     printBin((int)ACC, 16);
+    printFlags();
+    printf("\nACC: %i\n", ACC);
+    printf("\nACC: 0x%02X\n", ACC);
     printf("\n");
 }
 
@@ -68,7 +76,8 @@ int ALU(void)
     static int ACC = 0x0000;
     unsigned char temp_OP2;
     unsigned int temp_ACC;
-    printf("=============================== ALU ===============================");
+    printf("=============================== ALU ===============================\n");
+    printf("BUS------------>%02X\n", BUS);
     if (CONTROL == 0x1E || CONTROL == 0x1D) // 1E ADD, 1D SUB
     {
         if (CONTROL == 0x1D)
@@ -81,12 +90,16 @@ int ALU(void)
         }
         temp_ACC = (int)ACC + temp_OP2;
         ACC = (unsigned char)temp_ACC;
+        printBin(ACC, 16);
+        setFlags(ACC); // must put here to updata flags to update, CAREFULL!!! might be bugged if overflow for ADDITION!!!
         printACC(ACC);
     }
     else if (CONTROL == 0x1B) // MULTIPLICATION
     {
+
         temp_OP2 = BUS;
         temp_ACC = (int)ACC * temp_OP2;
+        setFlags(temp_ACC); // using temp_ACC for seting flag as ACC is truncated therefore OF and CF are not triggered.
         ACC = (unsigned char)temp_ACC;
         printACC(ACC);
     }
@@ -126,6 +139,7 @@ int ALU(void)
     else if (CONTROL == 0x09) // WACC OPERATION
     {
         ACC = BUS;
+
         printACC(ACC);
     }
     else if (CONTROL == 0x0B) // RACC OPERATION
@@ -135,44 +149,53 @@ int ALU(void)
         printBin((int)BUS, 16);
         printf("\n");
     }
-    else if (CONTROL == 0x11)
+    else if (CONTROL == 0x11) // BRLT OPERATION
     {
-        if(ACC < BUS)
-            ACC = BUS;
+        temp_OP2 = twosComp(BUS);
+        temp_ACC = (int)ACC + temp_OP2;
+        setFlags(temp_ACC);
+        ACC = (unsigned char)temp_ACC;
+        printBin(temp_ACC, 16);
         printACC(ACC);
     }
-    else if (CONTROL == 0x12)
+    else if (CONTROL == 0x12) // BRGT OPERATION
     {
-        if(ACC > BUS)
-            ACC = BUS;
+        temp_OP2 = twosComp(BUS);
+        temp_ACC = (int)ACC + temp_OP2;
+        ACC = (unsigned char)temp_ACC;
+        printBin(ACC, 16);
+        setFlags(ACC);
         printACC(ACC);
     }
-    else if (CONTROL == 0x13)
+    else if (CONTROL == 0x13) // BRNE OPERATION
     {
-        if(ACC != BUS)
-            ACC = BUS;
+        temp_OP2 = twosComp(BUS);
+        temp_ACC = (int)ACC + temp_OP2;
+        ACC = (unsigned char)temp_ACC;
+        printBin(ACC, 16);
+        setFlags(ACC);
         printACC(ACC);
-
     }
-    else if (CONTROL == 0x14)
+    else if (CONTROL == 0x14) // BRE OPERATION
     {
-        if(ACC == BUS)
-            ACC = BUS;
+        temp_OP2 = twosComp(BUS);
+        temp_ACC = (int)ACC + temp_OP2;
+        ACC = (unsigned char)temp_ACC;
+        printBin(ACC, 16);
+        setFlags(ACC);
         printACC(ACC);
-
     }
     else
     {
         printf("Error!");
     }
-    printf("===================================================================");
-    setFlags((int)ACC);
+    printf("===================================================================\n");
     return 0;
 }
 
 int CU(void)
 {
-    unsigned short operand, IR, PC, MAR = 0, MBR, IO_AR, IO_BR, inst_code;
+    unsigned short operand, IR, PC, MAR = 0, MBR, IO_AR, IO_BR = 0, inst_code;
     unsigned char progMemoryStart = 0x000;
     unsigned short dataMemoryStart = 0x400;
     unsigned char FETCH, IO, MEMORY;
@@ -204,7 +227,8 @@ int CU(void)
             PC++;
             ADDR = PC;
         }
-
+        printf("PC      ===== 0x%i\n", PC);     // REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!
+        printf("ADDR    ===== 0x%04X\n", ADDR); // REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!
         MainMemory();
         // Fetching lower byte
         if (FETCH == 1)
@@ -212,9 +236,10 @@ int CU(void)
             IR = IR | BUS;
             PC++;
         }
-
-        inst_code = IR >> 11;  // Gets upper 5 bits for instruction
-        operand = IR & 0x07FF; // Gets lower 11 bits for operand
+        printf("PC      ===== 0x%i\n", PC);     // REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!
+        printf("ADDR    ===== 0x%04X\n", ADDR); // REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!
+        inst_code = IR >> 11;                   // Gets upper 5 bits for instruction
+        operand = IR & 0x07FF;                  // Gets lower 11 bits for operand
 
         if (inst_code == 0x01)
         {                  // Write to memory (WM)
@@ -233,7 +258,8 @@ int CU(void)
             {              // If MEMORY is being accessed,
                 BUS = MBR; // Set BUS to MBR
             }
-            MainMemory(); // Run MainMemory
+            MainMemory();                                     // Run MainMemory
+            printf("Data Memory = 0x%02X", dataMemory[ADDR]); // REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!
         }
         else if (inst_code == 0x02)
         { // Read from Memory (RM)
@@ -253,6 +279,7 @@ int CU(void)
             {
                 MBR = BUS;
             }
+            ADDR = PC - 1;
         }
         else if (inst_code == 0x03)
         { // branch (BR)
@@ -300,6 +327,7 @@ int CU(void)
                 BUS = IO_BR;
             }
             IOMemory();
+            printf("I/O Memory = 0x%02X\n", ioBuffer[ADDR]); // REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!// REMOVE AFTER DEBUGGING!!!
         }
         else if (inst_code == 0x06)
         { // write data to MBR (WB)
@@ -319,56 +347,134 @@ int CU(void)
             IO_BR = operand & 0xFF;
             OE = 0;
         }
-        else if(inst_code == 0x1E)
+        else if (inst_code == 0x09)
+        { // Write data on BUS to ACC (WACC)
+            CONTROL = inst_code;
+            OE = 0;
+            BUS = MBR;
+            temp = ALU();
+        }
+        else if (inst_code == 0x0B)
+        { // Read ACC to bus (RACC)
+            CONTROL = inst_code;
+            OE = 0;
+            temp = ALU();
+            MBR = BUS;
+        }
+        else if (inst_code == 0x0E)
+        { // Swap data of MBR and IOBR (SWAP)
+            CONTROL = inst_code;
+            OE = 0;
+            temp = MBR;
+            MBR = IO_BR;
+            IO_BR = temp;
+        }
+        else if (inst_code == 0x1E)
+        { // Adds the data on the BUS to ACC register, sum stored to ACC (ADD)
+            CONTROL = inst_code;
+            OE = 0;
+            BUS = MBR;
+            temp = ALU();
+        }
+        else if (inst_code == 0x1D)
+        { // Subtract the data on the BUS from the ACC register, difference stored to ACC (SUB)
+            CONTROL = inst_code;
+            OE = 0;
+            BUS = MBR;
+            temp = ALU();
+        }
+        else if (inst_code == 0x1B)
+        { // Multiply the value of ACC to BUS, product stored to ACC (MUL)
+            CONTROL = inst_code;
+            OE = 0;
+            BUS = MBR;
+            temp = ALU();
+        }
+        else if (inst_code == 0x1A)
+        { // AND the value of ACC and BUS, result stored to ACC
+            CONTROL = inst_code;
+            OE = 0;
+            BUS = MBR;
+            temp = ALU();
+        }
+        else if (inst_code == 0x19)
+        { // OR the value of ACC and BUS, result stored to ACC (OR)
+            CONTROL = inst_code;
+            OE = 0;
+            BUS = MBR;
+            temp = ALU();
+        }
+        else if (inst_code == 0x18)
+        { // Complement the value of ACC, result stored to ACC (NOT)
+            CONTROL = inst_code;
+            OE = 0;
+            BUS = MBR;
+            temp = ALU();
+        }
+        else if (inst_code == 0x17)
+        { // XOR the value of ACC and BUS, result stored to ACC (XOR)
+            CONTROL = inst_code;
+            OE = 0;
+            BUS = MBR;
+            temp = ALU();
+        }
+        else if (inst_code == 0x16)
         {
             CONTROL = inst_code;
             temp = ALU();
         }
-        else if(inst_code == 0x1D)
+        else if (inst_code == 0x15)
         {
             CONTROL = inst_code;
             temp = ALU();
         }
-        else if(inst_code == 0x1B)
-        {
+        else if (inst_code == 0x14)
+        { // Compare ACC and BUS, if equal branch to address specified (BRE)
             CONTROL = inst_code;
+            ADDR = operand;
+            OE = 0;
+            BUS = MBR;
             temp = ALU();
-            
+            if (ZF == 1)
+            {
+                PC = ADDR;
+            }
         }
-        else if(inst_code == 0x1A)
-        {
+        else if (inst_code == 0x13)
+        { // Compare ACC and BUS, if not equal branch to address specified (BRNE)
             CONTROL = inst_code;
+            ADDR = operand;
+            OE = 0;
+            BUS = MBR;
             temp = ALU();
+            if (ZF == 0)
+            {
+                PC = ADDR;
+            }
         }
-        else if(inst_code == 0x19)
-        {
+        else if (inst_code == 0x12)
+        { // Compare ACC and BUS, if ACC > BUS, branch to address specified (BRGT)
             CONTROL = inst_code;
+            ADDR = operand;
+            OE = 0;
+            BUS = MBR;
             temp = ALU();
-            
+            if (SF == 0)
+            {
+                PC = ADDR;
+            }
         }
-        else if(inst_code == 0x18)
-        {
+        else if (inst_code == 0x11)
+        { // Compare ACC and BUS, if ACC < BUS, branch to address specified (BRLT)
             CONTROL = inst_code;
+            ADDR = operand;
+            OE = 0;
+            BUS = MBR;
             temp = ALU();
-            
-        }
-        else if(inst_code == 0x17)
-        {
-            CONTROL = inst_code;
-            temp = ALU();
-            
-        }
-        else if(inst_code == 0x16)
-        {
-            CONTROL = inst_code;
-            temp = ALU();
-            
-        }
-        else if(inst_code == 0x15)
-        {
-            CONTROL = inst_code;
-            temp = ALU();
-            
+            if (SF == 1)
+            {
+                PC = ADDR;
+            }
         }
         else if (inst_code != 0x1F)
         {
@@ -409,14 +515,16 @@ void IOMemory()
     }
 }
 
-void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short operand, unsigned short MBR,
-                   unsigned char BUS, unsigned short ADDR, unsigned short MAR, unsigned short IO_AR, unsigned char IO, unsigned short IO_BR, unsigned char FETCH, unsigned char MEMORY,
-                   unsigned char CONTROL, int IOM, int RW, int OE)
+void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short operand,
+                   unsigned short MBR, unsigned char BUS, unsigned short ADDR, unsigned short MAR,
+                   unsigned short IO_AR, unsigned char IO, unsigned short IO_BR, unsigned char FETCH,
+                   unsigned char MEMORY, unsigned char CONTROL, int IOM, int RW, int OE)
 {
+    printf("MBR = %02X\n\n", MBR);
 
-    printf("Address BUS\t: 0x%03X\n", ADDR);
+    printf("Address BUS\t: 0x%04X\n", ADDR);
     printf("DATA BUS\t: 0x%02X\n\n", BUS);
-    printf("MAR \t\t: 0x%X\n", MAR);
+    printf("MAR \t\t: 0x%04X\n", MAR);
     printf("IO_AR \t\t: 0x%02X\n", IO_AR);
     printf("IO_BR \t\t: 0x%02X\n\n", IO_BR);
 
@@ -431,13 +539,14 @@ void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short o
     printf("R/W \t\t: %i\n", RW);
     printf("OE  \t\t: %i\n\n", OE);
 
-    printf("IR \t \t: 0x%X\n", IR);
+    printf("IR \t \t: 0x%04X\n", IR);
     printf("Instruction Code: 0x%02X\n", inst_code);
-    printf("Operand \t: 0x%03X\n", operand);
+    printf("Operand \t: 0x%04X\n", operand);
     if (inst_code == 0x01)
     {
         printf("Instruction \t: WM\n");
         printf("Writing data to memory...\n");
+        printf("MBR \t\t: 0x%02X\n", MBR);
     }
     else if (inst_code == 0x02)
     {
@@ -472,26 +581,52 @@ void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short o
         printf("Instruction\t: EOP\n");
         printf("End of program.\n\n");
     }
+
+    // DISPLAY OTHER INSTRUCTIONS
+    // Add other instructions like ADD, MUL, SUB, and etc.
+
+    printf("============================================================\n\n");
 }
 
-void setFlags(int ACC)
+void setFlags(unsigned int ACC)
 {
     if (ACC == 0x0000)
     {
-        FLAGS |= 0x01;
+        ZF = 1;
+    }
+    else if (ACC != 0x0000)
+    {
+        ZF = 0;
     }
     if ((ACC & 0x0080) == 0x0080)
     {
-        FLAGS |= 0x04;
+        SF = 1;
     }
-    if (ACC > 0X7F)
+    else if ((ACC & 0x0080) != 0x0080) // Same issue with OF, ACC bits must be consistent so appropriate Flag will be set
     {
-        FLAGS |= 0x80;
+        SF = 0;
+    }
+    if (ACC > 0X7F) // Will be one(1)(TRUE) for other operations even if it is suppose to be zero(0) as ACC is only 7 bits with
+    {               // the 8th bit(MSB for ACC) being the signed bit, Please change if neccessary.
+        OF = 1;
+    }
+    else if (ACC <= 0X7F)
+    {
+        OF = 0;
     }
     if (ACC > 0xFF)
     {
-        FLAGS |= 0x02;
+        CF = 1;
     }
+    else if (ACC <= 0xFF)
+    {
+        CF = 0;
+    }
+}
+
+void printFlags()
+{
+    printf("\nZF=%d, CF=%d, SF=%d, OF=%d", ZF, CF, SF, OF);
 }
 
 void initMemory(void)
@@ -731,10 +866,10 @@ void initMemory(void)
     BUS = 0x3C;
     MainMemory();
 
-    // (WM) 0xF0 <- MBR
+    // (WM) 0xF0 <- MBR // WEIRD OPERATION, IDK if TYPO or what????
     ADDR = 0x03A;
-    BUS = 0x30;
-    MainMemory();
+    BUS = 0x30;   // (WM) is shown! but test case show that MBR = 0xF0
+    MainMemory(); // will follow result of test case using the appropriate operation (WB)
     ADDR = 0x03B;
     BUS = 0xF0;
     MainMemory();
@@ -760,7 +895,7 @@ void initMemory(void)
     BUS = 0x30;
     MainMemory();
     ADDR = 0x041;
-    BUS = 0x00;
+    BUS = 0x00; // 0x00 original
     MainMemory();
 
     // (WACC) ACC <- BUS
@@ -768,7 +903,7 @@ void initMemory(void)
     BUS = 0x48;
     MainMemory();
     ADDR = 0x043;
-    BUS = 0x00;
+    BUS = 0x00; // 0x00
     MainMemory();
 
     // (WB) MBR <- 0x03
@@ -787,7 +922,7 @@ void initMemory(void)
     BUS = 0x00;
     MainMemory();
 
-    // (MUL) ACC * BUS
+    // (WB) MBR <- 0x00
     ADDR = 0x048;
     BUS = 0x30;
     MainMemory();
@@ -795,7 +930,7 @@ void initMemory(void)
     BUS = 0x00;
     MainMemory();
 
-    // (BRE) PC <- 0x052 if ACC - BUS == 0
+    // (BRE) PC <- 0x052 if ACC - BUS == 0 //NEEDS CHECKING HERE!!!
     ADDR = 0x04A;
     BUS = 0xA0;
     MainMemory();
@@ -835,4 +970,3 @@ void initMemory(void)
     BUS = 0x00;
     MainMemory();
 }
-
