@@ -8,16 +8,13 @@ CREATED ON      :09 April 2024
 ============================================================================================================*/
 
 #include <stdio.h>
-#include <stdbool.h>
 
 unsigned char dataMemory[2048];
 unsigned char ioBuffer[32];
 unsigned char FLAGS; // 7 - OF, 2 - SF, 1 - CF, 0 - ZF
-unsigned short ADDR;
+unsigned short ADDR, TEMP_ADDR;
 unsigned char BUS, CONTROL;
 int IOM = 0, RW = 0, OE = 0;
-
-bool SF, OF, ZF, CF;
 
 unsigned char twosComp(unsigned char op);
 void printBin(int data, unsigned char data_width);
@@ -26,7 +23,7 @@ int multiplication(unsigned char operand1, unsigned char operand2, unsigned char
 void initMemory();
 void MainMemory();
 void IOMemory();
-void setFlags(unsigned int ACC);
+void setFlags(int ACC);
 void printFlags();
 void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short operand,
                    unsigned short MBR, unsigned char BUS, unsigned short ADDR, unsigned short MAR,
@@ -86,9 +83,13 @@ int ALU(void)
             temp_OP2 = BUS;
         }
         temp_ACC = (int)ACC + temp_OP2;
+        temp_ACC = (unsigned char) temp_ACC;
+        setFlags(temp_ACC);
+        if(ACC < BUS && CONTROL == 0x1D) {
+            FLAGS |= 0x02;
+        }
+        printACC(temp_ACC);
         ACC = (unsigned char)temp_ACC;
-        setFlags(ACC);
-        printACC(ACC);
     }
     else if (CONTROL == 0x1B) // MULTIPLICATION
     {
@@ -143,43 +144,59 @@ int ALU(void)
         printf("BUS: ");
         printBin((int)BUS, 16);
         printf("\n");
-        print("ACC\t\t: 0x%02X", ACC);
+        printf("ACC\t\t: 0x%02X", ACC);
     }
     else if (CONTROL == 0x11) // BRLT OPERATION
     {
         temp_OP2 = twosComp(BUS);
         temp_ACC = (int)ACC + temp_OP2;
+        temp_ACC = (unsigned char) temp_ACC;
         setFlags(temp_ACC);
+        if(ACC < BUS) {
+            FLAGS |= 0x02;
+        }
+        printACC(temp_ACC);
+        printf("ACC\t\t: 0x%02X", temp_ACC);
         ACC = (unsigned char)temp_ACC;
-        printACC(ACC);
-        print("ACC\t\t: 0x%02X", ACC);
     }
     else if (CONTROL == 0x12) // BRGT OPERATION
     {
         temp_OP2 = twosComp(BUS);
         temp_ACC = (int)ACC + temp_OP2;
+        temp_ACC = (unsigned char) temp_ACC;
+        setFlags(temp_ACC);
+        if(ACC < BUS) {
+            FLAGS |= 0x02;
+        }
+        printACC(temp_ACC);
+        printf("ACC\t\t: 0x%02X", temp_ACC);
         ACC = (unsigned char)temp_ACC;
-        setFlags(ACC);
-        printACC(ACC);
-        print("ACC\t\t: 0x%02X", ACC);
     }
     else if (CONTROL == 0x13) // BRNE OPERATION
     {
         temp_OP2 = twosComp(BUS);
         temp_ACC = (int)ACC + temp_OP2;
+        temp_ACC = (unsigned char) temp_ACC;
+        setFlags(temp_ACC);
+        if(ACC < BUS) {
+            FLAGS |= 0x02;
+        }
+        printACC(temp_ACC);
+        printf("ACC\t\t: 0x%02X", temp_ACC);
         ACC = (unsigned char)temp_ACC;
-        setFlags(ACC);
-        printACC(ACC);
-        print("ACC\t\t: 0x%02X", ACC);
     }
     else if (CONTROL == 0x14) // BRE OPERATION
     {
         temp_OP2 = twosComp(BUS);
         temp_ACC = (int)ACC + temp_OP2;
+        temp_ACC = (unsigned char) temp_ACC;
+        setFlags(temp_ACC);
+        if(ACC < BUS) {
+            FLAGS |= 0x02;
+        }
+        printACC(temp_ACC);
+        printf("ACC\t\t: 0x%02X", temp_ACC);
         ACC = (unsigned char)temp_ACC;
-        setFlags(ACC);
-        printACC(ACC);
-        print("ACC\t\t: 0x%02X", ACC);
     }
     else
     {
@@ -197,7 +214,6 @@ int CU(void)
     int temp = 0;
 
     PC = progMemoryStart;
-    printf("Initializing Main Memory...\n");
     MainMemory();
     while (inst_code != 0x1F)
     {
@@ -232,6 +248,8 @@ int CU(void)
         }
         inst_code = IR >> 11;  // Gets upper 5 bits for instruction
         operand = IR & 0x07FF; // Gets lower 11 bits for operand
+
+        TEMP_ADDR = ADDR - 1;
 
         if (inst_code == 0x01)
         {                  // Write to memory (WM)
@@ -425,7 +443,7 @@ int CU(void)
             OE = 0;
             BUS = MBR;
             temp = ALU();
-            if (ZF == 1)
+            if ((FLAGS & 0x01) == 0x01)
             {
                 PC = ADDR;
             }
@@ -437,7 +455,7 @@ int CU(void)
             OE = 0;
             BUS = MBR;
             temp = ALU();
-            if (ZF == 0)
+            if ((FLAGS & 0x01) == 0x00)
             {
                 PC = ADDR;
             }
@@ -449,7 +467,7 @@ int CU(void)
             OE = 0;
             BUS = MBR;
             temp = ALU();
-            if (SF == 0)
+            if ((FLAGS & 0x02) == 0)
             {
                 PC = ADDR;
             }
@@ -461,7 +479,7 @@ int CU(void)
             OE = 0;
             BUS = MBR;
             temp = ALU();
-            if (SF == 1)
+            if (((FLAGS & 0x02) >> 1) == 0x01)
             {
                 PC = ADDR;
             }
@@ -510,11 +528,11 @@ void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short o
                    unsigned short IO_AR, unsigned char IO, unsigned short IO_BR, unsigned char FETCH,
                    unsigned char MEMORY, unsigned char CONTROL, int IOM, int RW, int OE)
 {
-    printf("===================================================================\n");
-    printf("Address BUS\t: 0x%04X\n", ADDR);
+    printf("\n===================================================================\n");
+    printf("Address BUS\t: 0x%04X\n", TEMP_ADDR);
     printf("DATA BUS\t: 0x%02X\n\n", BUS);
     printf("MAR \t\t: 0x%04X\n", MAR);
-    printf("MBR = %02X\n", MBR);
+    printf("MBR \t\t: 0x%02X\n", MBR);
     printf("IO_AR \t\t: 0x%02X\n", IO_AR);
     printf("IO_BR \t\t: 0x%02X\n\n", IO_BR);
 
@@ -655,45 +673,26 @@ void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short o
     printf("===================================================================\n\n");
 }
 
-void setFlags(unsigned int ACC)
+void setFlags(int ACC)
 {
-    if (ACC == 0x0000)
+    FLAGS = 0x00;
+    if (ACC == 0x0000) // ZF
     {
-        ZF = 1;
+        FLAGS |= 0x01;
     }
-    else if (ACC != 0x0000)
+    if (ACC > 0xFF) // OF
     {
-        ZF = 0;
+        FLAGS |= 0x80;
     }
-    if ((ACC & 0x0080) == 0x0080)
+    if (ACC > 0xFF) // CF
     {
-        SF = 1;
-    }
-    else if ((ACC & 0x0080) != 0x0080) // Same issue with OF, ACC bits must be consistent so appropriate Flag will be set
-    {
-        SF = 0;
-    }
-    if (ACC > 0X7F) // Will be one(1)(TRUE) for other operations even if it is suppose to be zero(0) as ACC is only 7 bits with
-    {               // the 8th bit(MSB for ACC) being the signed bit, Please change if neccessary.
-        OF = 1;
-    }
-    else if (ACC <= 0X7F)
-    {
-        OF = 0;
-    }
-    if (ACC > 0xFF)
-    {
-        CF = 1;
-    }
-    else if (ACC <= 0xFF)
-    {
-        CF = 0;
+        FLAGS |= 0x02;
     }
 }
 
 void printFlags()
 {
-    printf("\nZF=%d, CF=%d, SF=%d, OF=%d\n", ZF, CF, SF, OF);
+    printf("\nZF=%d, CF=%d, SF=%d, OF=%d\n", (FLAGS & 0x01), (FLAGS & 0x02) >> 1, (FLAGS & 0x04) >> 2, (FLAGS & 0x80) >> 7);
 }
 
 void initMemory(void)
