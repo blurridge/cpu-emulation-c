@@ -508,13 +508,13 @@ void MainMemory()
 {
     unsigned char col, row, cs;
 
-    if (IOM == 1 && OE == 1)
+    if (IOM == 1)
     {                               // 5 bits for col and row, and 1 bit for cs
         col = ADDR & 0x001F;        // get lower 5 bits of the ADDRESS      0000 0001 1111
         row = (ADDR >> 5) & 0x001F; // get the next lower 5 bits of ADDRESS 0011 1110 0000
         cs = ADDR >> 10;            // get the 11th bit of the ADDRESS      0100 0000 0000
 
-        if (RW == 0)
+        if (RW == 0 && OE == 1)
         {
             BUS = ReadMemory(row, col, cs); // read from memory address
         }
@@ -533,14 +533,14 @@ unsigned char ReadMemory(unsigned char row, unsigned char col, unsigned char cs)
 
     if (cs == 0) // chip select A
     {
-        decodeLocation[7] = A8[(row * col)];
-        decodeLocation[6] = A7[(row * col)]; // the concept is 8 bit data is scattered among 8 chips of 1 chip group
-        decodeLocation[5] = A6[(row * col)]; // each of  Ax[(row*col)] should contain 1 bit of data
-        decodeLocation[4] = A5[(row * col)]; // combined together it will haave an 8 bit of data from A1-A8
-        decodeLocation[3] = A4[(row * col)];
-        decodeLocation[2] = A3[(row * col)];
-        decodeLocation[1] = A2[(row * col)];
-        decodeLocation[0] = A1[(row * col)];
+        decodeLocation[7] = (A8[row] >> col) & 1;
+        decodeLocation[6] = (A7[row] >> col) & 1; // the concept is 8 bit data is scattered among 8 chips of 1 chip group
+        decodeLocation[5] = (A6[row] >> col) & 1; // each of  Ax[(row*col)] should contain 1 bit of data
+        decodeLocation[4] = (A5[row] >> col) & 1; // combined together it will haave an 8 bit of data from A1-A8
+        decodeLocation[3] = (A4[row] >> col) & 1;
+        decodeLocation[2] = (A3[row] >> col) & 1;
+        decodeLocation[1] = (A2[row] >> col) & 1;
+        decodeLocation[0] = (A1[row] >> col) & 1;
 
         for (i = 0; i <= 7; i++) // Add bit by bit to addresslocation from lsb to msb
         {
@@ -551,14 +551,14 @@ unsigned char ReadMemory(unsigned char row, unsigned char col, unsigned char cs)
 
     else if (cs == 1) // chip select B
     {
-        decodeLocation[7] = B8[(row * col)];
-        decodeLocation[6] = B7[(row * col)];
-        decodeLocation[5] = B6[(row * col)];
-        decodeLocation[4] = B5[(row * col)];
-        decodeLocation[3] = B4[(row * col)];
-        decodeLocation[2] = B3[(row * col)];
-        decodeLocation[1] = B2[(row * col)];
-        decodeLocation[0] = B1[(row * col)];
+        decodeLocation[7] = (B8[row] >> col) & 1;
+        decodeLocation[6] = (B7[row] >> col) & 1; // the concept is 8 bit data is scattered among 8 chips of 1 chip group
+        decodeLocation[5] = (B6[row] >> col) & 1; // each of  Ax[(row*col)] should contain 1 bit of data
+        decodeLocation[4] = (B5[row] >> col) & 1; // combined together it will haave an 8 bit of data from A1-A8
+        decodeLocation[3] = (B4[row] >> col) & 1;
+        decodeLocation[2] = (B3[row] >> col) & 1;
+        decodeLocation[1] = (B2[row] >> col) & 1;
+        decodeLocation[0] = (B1[row] >> col) & 1;
 
         for (i = 0; i <= 7; i++) // Add bit by bit to addresslocation from lsb to msb
         {
@@ -575,54 +575,68 @@ void WriteMemory(unsigned char row, unsigned char col, unsigned char cs)
     if (cs == 0)
     {
         temp = BUS & 1;
-        A1[(row * col)] = temp;
+        A1[row] |= (temp << col);
+
         temp = BUS >> 1;
         temp = temp & 1;
-        A2[(row * col)] = temp;
+        A2[row] |= (temp << col);
+
         temp = BUS >> 2;
         temp = temp & 1;
-        A3[(row * col)] = temp;
+        A3[row] |= (temp << col);
+
         temp = BUS >> 3;
         temp = temp & 1;
-        A4[(row * col)] = temp;
+        A4[row] |= (temp << col);
+
         temp = BUS >> 4;
         temp = temp & 1;
-        A5[(row * col)] = temp;
+        A5[row] |= (temp << col);
+
         temp = BUS >> 5;
         temp = temp & 1;
-        A6[(row * col)] = temp;
+        A6[row] |= (temp << col);
+
         temp = BUS >> 6;
         temp = temp & 1;
-        A7[(row * col)] = temp;
+        A7[row] |= (temp << col);
+
         temp = BUS >> 7;
         temp = temp & 1;
-        A8[(row * col)] = temp;
+        A8[row] |= (temp << col);
     }
     else
     {
         temp = BUS & 1;
-        B1[(row * col)] = temp;
+        B1[row] |= (temp << col);
+
         temp = BUS >> 1;
         temp = temp & 1;
-        B2[(row * col)] = temp;
+        B2[row] |= (temp << col);
+
         temp = BUS >> 2;
         temp = temp & 1;
-        B3[(row * col)] = temp;
+        B3[row] |= (temp << col);
+
         temp = BUS >> 3;
         temp = temp & 1;
-        B4[(row * col)] = temp;
+        B4[row] |= (temp << col);
+
         temp = BUS >> 4;
         temp = temp & 1;
-        B5[(row * col)] = temp;
+        B5[row] |= (temp << col);
+
         temp = BUS >> 5;
         temp = temp & 1;
-        B6[(row * col)] = temp;
+        B6[row] |= (temp << col);
+
         temp = BUS >> 6;
         temp = temp & 1;
-        B7[(row * col)] = temp;
+        B7[row] |= (temp << col);
+
         temp = BUS >> 7;
         temp = temp & 1;
-        B8[(row * col)] = temp;
+        B8[row] |= (temp << col);
     }
 }
 
