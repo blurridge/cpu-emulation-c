@@ -17,6 +17,9 @@ unsigned short ADDR, TEMP_ADDR;
 unsigned char BUS, CONTROL;
 int IOM = 0, RW = 0, OE = 0;
 
+long A1[32], A2[32], A3[32], A4[32], A5[32], A6[32], A7[32], A8[32]; // chip group A
+long B1[32], B2[32], B3[32], B4[32], B5[32], B6[32], B7[32], B8[32]; // chip group
+
 unsigned char twosComp(unsigned char op);
 void printBin(int data, unsigned char data_width);
 int ALU(void);
@@ -501,16 +504,65 @@ int CU(void)
 
 void MainMemory()
 {
-    if (IOM == 1)
-    {
-        if (RW == 0 && OE == 1)
+    unsigned char col, row, cs;
+
+    if (IOM == 1 && OE == 1)
+    {                               // 5 bits for col and row, and 1 bit for cs
+        col = ADDR & 0x001F;        // get lower 5 bits of the ADDRESS      0000 0001 1111
+        row = (ADDR >> 5) & 0x001F; // get the next lower 5 bits of ADDRESS 0011 1110 0000
+        cs = ADDR >> 10;            // get the 11th bit of the ADDRESS      0100 0000 0000
+
+        if (RW == 0)
         {
-            BUS = dataMemory[ADDR];
+            BUS = ReadMemory(row, col, cs); // read from memory address, the concept is 8 bit data is scattered among 8 chips of 1 chip group
         }
-        else if (RW == 1 && OE == 1)
+        else if (RW == 1)
         {
             dataMemory[ADDR] = BUS;
         }
+    }
+}
+
+unsigned char ReadMemory(unsigned char row, unsigned char col, unsigned char cs)
+{
+    unsigned char decodeLocation[7];
+    unsigned char addressLocation;
+    int i = 0;
+
+    if (cs == 0) // chip select A
+    {
+        decodeLocation[7] = A8[(row * col)];
+        decodeLocation[6] = A7[(row * col)];
+        decodeLocation[5] = A6[(row * col)]; // each of  Ax[(row*col)] should contain 1 bit of data
+        decodeLocation[4] = A5[(row * col)]; // combined together it will haave an 8 bit of data from A1-A7
+        decodeLocation[3] = A4[(row * col)];
+        decodeLocation[2] = A3[(row * col)];
+        decodeLocation[1] = A2[(row * col)];
+        decodeLocation[0] = A1[(row * col)];
+
+        for (i = 0; i <= 7; i++) // Add bit by bit to addresslocation from lsb to msb
+        {
+            addressLocation |= (decodeLocation[i] << i);
+        }
+        return addressLocation;
+    }
+
+    else if (cs == 1) // chip select B
+    {
+        decodeLocation[7] = B8[combineRowCol(row, col)];
+        decodeLocation[6] = B7[combineRowCol(row, col)];
+        decodeLocation[5] = B6[combineRowCol(row, col)];
+        decodeLocation[4] = B5[combineRowCol(row, col)];
+        decodeLocation[3] = B4[combineRowCol(row, col)];
+        decodeLocation[2] = B3[combineRowCol(row, col)];
+        decodeLocation[1] = B2[combineRowCol(row, col)];
+        decodeLocation[0] = B1[combineRowCol(row, col)];
+
+        for (i = 0; i <= 7; i++) // Add bit by bit to addresslocation from lsb to msb
+        {
+            addressLocation |= (decodeLocation[i] << i);
+        }
+        return addressLocation;
     }
 }
 
