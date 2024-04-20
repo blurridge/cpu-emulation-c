@@ -27,6 +27,7 @@ int multiplication(unsigned char operand1, unsigned char operand2, unsigned char
 void initMemory();
 unsigned char ReadMemory(unsigned char row, unsigned char col, unsigned char cs);
 void WriteMemory(unsigned char row, unsigned char col, unsigned char cs);
+void setBit(long* num, int pos, int value);
 void MainMemory();
 void IOMemory();
 void setFlags(int ACC);
@@ -518,7 +519,7 @@ void MainMemory()
         {
             BUS = ReadMemory(row, col, cs); // read from memory address
         }
-        else if (RW == 1)
+        else if (RW == 1 && OE == 1)
         {
             WriteMemory(row, col, cs);
         }
@@ -527,42 +528,42 @@ void MainMemory()
 
 unsigned char ReadMemory(unsigned char row, unsigned char col, unsigned char cs)
 {
-    unsigned char decodeLocation[7];
-    unsigned char addressLocation;
+    unsigned char decodeLocation[8] = { 0 };
+    unsigned char addressLocation = 0;
     int i = 0;
 
     if (cs == 0) // chip select A
     {
-        decodeLocation[7] = (A8[row] >> col) & 1;
-        decodeLocation[6] = (A7[row] >> col) & 1; // the concept is 8 bit data is scattered among 8 chips of 1 chip group
-        decodeLocation[5] = (A6[row] >> col) & 1; // each of  Ax[(row*col)] should contain 1 bit of data
-        decodeLocation[4] = (A5[row] >> col) & 1; // combined together it will haave an 8 bit of data from A1-A8
-        decodeLocation[3] = (A4[row] >> col) & 1;
-        decodeLocation[2] = (A3[row] >> col) & 1;
-        decodeLocation[1] = (A2[row] >> col) & 1;
-        decodeLocation[0] = (A1[row] >> col) & 1;
+        decodeLocation[7] = (A1[row] >> col) & 1;
+        decodeLocation[6] = (A2[row] >> col) & 1; // the concept is 8 bit data is scattered among 8 chips of 1 chip group
+        decodeLocation[5] = (A3[row] >> col) & 1; // each of  Ax[(row*col)] should contain 1 bit of data
+        decodeLocation[4] = (A4[row] >> col) & 1; // combined together it will haave an 8 bit of data from A1-A8
+        decodeLocation[3] = (A5[row] >> col) & 1;
+        decodeLocation[2] = (A6[row] >> col) & 1;
+        decodeLocation[1] = (A7[row] >> col) & 1;
+        decodeLocation[0] = (A8[row] >> col) & 1;
 
         for (i = 0; i <= 7; i++) // Add bit by bit to addresslocation from lsb to msb
         {
-            addressLocation |= (decodeLocation[i] << i);
+            addressLocation |= (decodeLocation[i] << (8 - i - 1));
         }
         return addressLocation;
     }
 
     else if (cs == 1) // chip select B
     {
-        decodeLocation[7] = (B8[row] >> col) & 1;
-        decodeLocation[6] = (B7[row] >> col) & 1; // the concept is 8 bit data is scattered among 8 chips of 1 chip group
-        decodeLocation[5] = (B6[row] >> col) & 1; // each of  Ax[(row*col)] should contain 1 bit of data
-        decodeLocation[4] = (B5[row] >> col) & 1; // combined together it will haave an 8 bit of data from A1-A8
-        decodeLocation[3] = (B4[row] >> col) & 1;
-        decodeLocation[2] = (B3[row] >> col) & 1;
-        decodeLocation[1] = (B2[row] >> col) & 1;
-        decodeLocation[0] = (B1[row] >> col) & 1;
+        decodeLocation[7] = (B1[row] >> col) & 1;
+        decodeLocation[6] = (B2[row] >> col) & 1; // the concept is 8 bit data is scattered among 8 chips of 1 chip group
+        decodeLocation[5] = (B3[row] >> col) & 1; // each of  Ax[(row*col)] should contain 1 bit of data
+        decodeLocation[4] = (B4[row] >> col) & 1; // combined together it will haave an 8 bit of data from A1-A8
+        decodeLocation[3] = (B5[row] >> col) & 1;
+        decodeLocation[2] = (B6[row] >> col) & 1;
+        decodeLocation[1] = (B7[row] >> col) & 1;
+        decodeLocation[0] = (B8[row] >> col) & 1;
 
         for (i = 0; i <= 7; i++) // Add bit by bit to addresslocation from lsb to msb
         {
-            addressLocation |= (decodeLocation[i] << i);
+            addressLocation |= (decodeLocation[i] << (8 - i - 1));
         }
         return addressLocation;
     }
@@ -570,73 +571,64 @@ unsigned char ReadMemory(unsigned char row, unsigned char col, unsigned char cs)
 
 void WriteMemory(unsigned char row, unsigned char col, unsigned char cs)
 {
-    unsigned char temp;
-
+    unsigned char temp = BUS;
     if (cs == 0)
     {
-        temp = BUS & 1;
-        A1[row] |= (temp << col);
+        setBit(&A1[row], col, (temp & 0x01));
 
-        temp = BUS >> 1;
-        temp = temp & 1;
-        A2[row] |= (temp << col);
+        temp >>= 1;
+        setBit(&A2[row], col, (temp & 0x01));
 
-        temp = BUS >> 2;
-        temp = temp & 1;
-        A3[row] |= (temp << col);
+        temp >>= 1;
+        setBit(&A3[row], col, (temp & 0x01));
 
-        temp = BUS >> 3;
-        temp = temp & 1;
-        A4[row] |= (temp << col);
+        temp >>= 1;
+        setBit(&A4[row], col, (temp & 0x01));
 
-        temp = BUS >> 4;
-        temp = temp & 1;
-        A5[row] |= (temp << col);
+        temp >>= 1;
+        setBit(&A5[row], col, (temp & 0x01));
 
-        temp = BUS >> 5;
-        temp = temp & 1;
-        A6[row] |= (temp << col);
+        temp >>= 1;
+        setBit(&A6[row], col, (temp & 0x01));
 
-        temp = BUS >> 6;
-        temp = temp & 1;
-        A7[row] |= (temp << col);
+        temp >>= 1;
+        setBit(&A7[row], col, (temp & 0x01));
 
-        temp = BUS >> 7;
-        temp = temp & 1;
-        A8[row] |= (temp << col);
+        temp >>= 1;
+        setBit(&A8[row], col, (temp & 0x01));
     }
     else
     {
-        temp = BUS & 1;
-        B1[row] |= (temp << col);
+        setBit(&B1[row], col, (temp & 0x01));
 
-        temp = BUS >> 1;
-        temp = temp & 1;
-        B2[row] |= (temp << col);
+        temp >>= 1;
+        setBit(&B2[row], col, (temp & 0x01));
 
-        temp = BUS >> 2;
-        temp = temp & 1;
-        B3[row] |= (temp << col);
+        temp >>= 1;
+        setBit(&B3[row], col, (temp & 0x01));
 
-        temp = BUS >> 3;
-        temp = temp & 1;
-        B4[row] |= (temp << col);
+        temp >>= 1;
+        setBit(&B4[row], col, (temp & 0x01));
 
-        temp = BUS >> 4;
-        temp = temp & 1;
-        B5[row] |= (temp << col);
+        temp >>= 1;
+        setBit(&B5[row], col, (temp & 0x01));
 
-        temp = BUS >> 5;
-        temp = temp & 1;
-        B6[row] |= (temp << col);
+        temp >>= 1;
+        setBit(&B6[row], col, (temp & 0x01));
 
-        temp = BUS >> 6;
-        temp = temp & 1;
-        B7[row] |= (temp << col);
+        temp >>= 1;
+        setBit(&B7[row], col, (temp & 0x01));
 
-        temp = BUS >> 7;
-        temp = temp & 1;
-        B8[row] |= (temp << col);
+        temp >>= 1;
+        setBit(&B8[row], col, (temp & 0x01));
+    }
+}
+
+void setBit(long* chip, int col, int value) {
+    if (value == 0) {
+        *chip &= ~(1u << col);
+    } else {
+        *chip |= (1u << col);
     }
 }
 
