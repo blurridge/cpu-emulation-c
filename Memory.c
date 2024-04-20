@@ -514,7 +514,7 @@ void MainMemory()
 
         if (RW == 0)
         {
-            BUS = ReadMemory(row, col, cs); // read from memory address, the concept is 8 bit data is scattered among 8 chips of 1 chip group
+            BUS = ReadMemory(row, col, cs); // read from memory address
         }
         else if (RW == 1)
         {
@@ -532,9 +532,9 @@ unsigned char ReadMemory(unsigned char row, unsigned char col, unsigned char cs)
     if (cs == 0) // chip select A
     {
         decodeLocation[7] = A8[(row * col)];
-        decodeLocation[6] = A7[(row * col)];
+        decodeLocation[6] = A7[(row * col)]; // the concept is 8 bit data is scattered among 8 chips of 1 chip group
         decodeLocation[5] = A6[(row * col)]; // each of  Ax[(row*col)] should contain 1 bit of data
-        decodeLocation[4] = A5[(row * col)]; // combined together it will haave an 8 bit of data from A1-A7
+        decodeLocation[4] = A5[(row * col)]; // combined together it will haave an 8 bit of data from A1-A8
         decodeLocation[3] = A4[(row * col)];
         decodeLocation[2] = A3[(row * col)];
         decodeLocation[1] = A2[(row * col)];
