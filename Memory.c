@@ -549,14 +549,14 @@ unsigned char ReadMemory(unsigned char row, unsigned char col, unsigned char cs)
 
     else if (cs == 1) // chip select B
     {
-        decodeLocation[7] = B8[combineRowCol(row, col)];
-        decodeLocation[6] = B7[combineRowCol(row, col)];
-        decodeLocation[5] = B6[combineRowCol(row, col)];
-        decodeLocation[4] = B5[combineRowCol(row, col)];
-        decodeLocation[3] = B4[combineRowCol(row, col)];
-        decodeLocation[2] = B3[combineRowCol(row, col)];
-        decodeLocation[1] = B2[combineRowCol(row, col)];
-        decodeLocation[0] = B1[combineRowCol(row, col)];
+        decodeLocation[7] = B8[(row * col)];
+        decodeLocation[6] = B7[(row * col)];
+        decodeLocation[5] = B6[(row * col)];
+        decodeLocation[4] = B5[(row * col)];
+        decodeLocation[3] = B4[(row * col)];
+        decodeLocation[2] = B3[(row * col)];
+        decodeLocation[1] = B2[(row * col)];
+        decodeLocation[0] = B1[(row * col)];
 
         for (i = 0; i <= 7; i++) // Add bit by bit to addresslocation from lsb to msb
         {
