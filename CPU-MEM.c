@@ -1,5 +1,5 @@
 /*============================================================================================================
-FILENAME        :Memory.c
+FILENAME        :CPU-MEM.c
 DESCRIPTION     :Redesign the Main Memory based on the TRACS memory organization discussed (column and row decoding).
                  Write a program that will emulate the memory organization by storing each bit on the proper row and column.
                  Test the memory module by writing and reading data to the memory. Finally, run the assembly program in Laboratory Exercise #4
