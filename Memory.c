@@ -25,6 +25,8 @@ void printBin(int data, unsigned char data_width);
 int ALU(void);
 int multiplication(unsigned char operand1, unsigned char operand2, unsigned char control_signals);
 void initMemory();
+unsigned char ReadMemory(unsigned char row, unsigned char col, unsigned char cs);
+void WriteMemory(unsigned char row, unsigned char col, unsigned char cs);
 void MainMemory();
 void IOMemory();
 void setFlags(int ACC);
@@ -518,7 +520,7 @@ void MainMemory()
         }
         else if (RW == 1)
         {
-            WriteMemory();
+            WriteMemory(row, col, cs);
         }
     }
 }
@@ -547,7 +549,6 @@ unsigned char ReadMemory(unsigned char row, unsigned char col, unsigned char cs)
         return addressLocation;
     }
 
-
     else if (cs == 1) // chip select B
     {
         decodeLocation[7] = B8[(row * col)];
@@ -567,63 +568,63 @@ unsigned char ReadMemory(unsigned char row, unsigned char col, unsigned char cs)
     }
 }
 
-    void WriteMemory(unsigned char row, unsigned char col, unsigned char cs)
-    {
-        unsigned char temp;
+void WriteMemory(unsigned char row, unsigned char col, unsigned char cs)
+{
+    unsigned char temp;
 
-        if(cs == 0)
-        {
-            temp = BUS & 1;
-            A1[(row * col)] = temp;
-            temp = BUS >> 1;
-            temp = temp & 1;
-            A2[(row * col)] = temp;
-            temp = BUS >> 2;
-            temp = temp & 1;
-            A3[(row * col)] = temp;
-            temp = BUS >> 3;
-            temp = temp & 1;
-            A4[(row * col)] = temp;
-            temp = BUS >> 4;
-            temp = temp & 1;
-            A5[(row * col)] = temp;
-            temp = BUS >> 5;
-            temp = temp & 1;
-            A6[(row * col)] = temp;
-            temp = BUS >> 6;
-            temp = temp & 1;
-            A7[(row * col)] = temp;
-            temp = BUS >> 7;
-            temp = temp & 1;
-            A8[(row * col)] = temp;
-        }
-        else
-        {
-            temp = BUS & 1;
-            B1[(row * col)] = temp;
-            temp = BUS >> 1;
-            temp = temp & 1;
-            B2[(row * col)] = temp;
-            temp = BUS >> 2;
-            temp = temp & 1;
-            B3[(row * col)] = temp;
-            temp = BUS >> 3;
-            temp = temp & 1;
-            B4[(row * col)] = temp;
-            temp = BUS >> 4;
-            temp = temp & 1;
-            B5[(row * col)] = temp;
-            temp = BUS >> 5;
-            temp = temp & 1;
-            B6[(row * col)] = temp;
-            temp = BUS >> 6;
-            temp = temp & 1;
-            B7[(row * col)] = temp;
-            temp = BUS >> 7;
-            temp = temp & 1;
-            B8[(row * col)] = temp;
-        }
+    if (cs == 0)
+    {
+        temp = BUS & 1;
+        A1[(row * col)] = temp;
+        temp = BUS >> 1;
+        temp = temp & 1;
+        A2[(row * col)] = temp;
+        temp = BUS >> 2;
+        temp = temp & 1;
+        A3[(row * col)] = temp;
+        temp = BUS >> 3;
+        temp = temp & 1;
+        A4[(row * col)] = temp;
+        temp = BUS >> 4;
+        temp = temp & 1;
+        A5[(row * col)] = temp;
+        temp = BUS >> 5;
+        temp = temp & 1;
+        A6[(row * col)] = temp;
+        temp = BUS >> 6;
+        temp = temp & 1;
+        A7[(row * col)] = temp;
+        temp = BUS >> 7;
+        temp = temp & 1;
+        A8[(row * col)] = temp;
     }
+    else
+    {
+        temp = BUS & 1;
+        B1[(row * col)] = temp;
+        temp = BUS >> 1;
+        temp = temp & 1;
+        B2[(row * col)] = temp;
+        temp = BUS >> 2;
+        temp = temp & 1;
+        B3[(row * col)] = temp;
+        temp = BUS >> 3;
+        temp = temp & 1;
+        B4[(row * col)] = temp;
+        temp = BUS >> 4;
+        temp = temp & 1;
+        B5[(row * col)] = temp;
+        temp = BUS >> 5;
+        temp = temp & 1;
+        B6[(row * col)] = temp;
+        temp = BUS >> 6;
+        temp = temp & 1;
+        B7[(row * col)] = temp;
+        temp = BUS >> 7;
+        temp = temp & 1;
+        B8[(row * col)] = temp;
+    }
+}
 
 void IOMemory()
 {
