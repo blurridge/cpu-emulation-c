@@ -349,6 +349,8 @@ int CU(void)
                 BUS = IO_BR;
             }
             IOMemory();
+            // InputSim();
+            SevenSegment();
         }
         else if (inst_code == 0x06)
         { // write data to MBR (WB)
@@ -850,339 +852,118 @@ void initMemory(void)
     printf("Initializing Main Memory...\n\n");
     IOM = 1, RW = 1, OE = 1;
 
-    // (WB) MBR <- 0x15
-    ADDR = 0x000;
+    ADDR = 0x00;
     BUS = 0x30;
     MainMemory();
-    ADDR = 0x001;
-    BUS = 0x15;
-    MainMemory();
-
-    // (WM) 0x400 <- MBR
-    ADDR = 0x002;
-    BUS = 0x0C;
-    MainMemory();
-    ADDR = 0x003;
+    ADDR = 0x01;
     BUS = 0x00;
     MainMemory();
-
-    // (WB) MBR <- 0x05
-    ADDR = 0x004;
+    ADDR = 0x02;
+    BUS = 0x0C;
+    MainMemory();
+    ADDR = 0x03;
+    BUS = 0x02;
+    MainMemory();
+    ADDR = 0x04;
     BUS = 0x30;
     MainMemory();
-    ADDR = 0x005;
-    BUS = 0x05;
+    ADDR = 0x05;
+    BUS = 0x01;
     MainMemory();
-
-    // (WACC) ACC <- BUS
-    ADDR = 0x006;
+    ADDR = 0x06;
+    BUS = 0x0C;
+    MainMemory();
+    ADDR = 0x07;
+    BUS = 0x04;
+    MainMemory();
+    ADDR = 0x08;
+    BUS = 0x30;
+    MainMemory();
+    ADDR = 0x09;
+    BUS = 0x09;
+    MainMemory();
+    ADDR = 0x0A;
+    BUS = 0x0C;
+    MainMemory();
+    ADDR = 0x0B;
+    BUS = 0x06;
+    MainMemory();
+    ADDR = 0x0C;
+    BUS = 0x14;
+    MainMemory();
+    ADDR = 0x0D;
+    BUS = 0x06;
+    MainMemory();
+    ADDR = 0x0E;
     BUS = 0x48;
     MainMemory();
-    ADDR = 0x007;
+    ADDR = 0x0F;
     BUS = 0x00;
     MainMemory();
-
-    // (WB) MBR <- 0x08
-    ADDR = 0x008;
-    BUS = 0x30;
-    MainMemory();
-    ADDR = 0x009;
-    BUS = 0x08;
-    MainMemory();
-
-    // (ADD) ACC + BUS
-    ADDR = 0x00A;
-    BUS = 0xF0;
-    MainMemory();
-    ADDR = 0x00B;
-    BUS = 0x00;
-    MainMemory();
-
-    // (RM) MBR <- 0x400
-    ADDR = 0x00C;
-    BUS = 0x14;
-    MainMemory();
-    ADDR = 0x00D;
-    BUS = 0x00;
-    MainMemory();
-
-    // (MUL) ACC * BUS
-    ADDR = 0x00E;
-    BUS = 0xD8;
-    MainMemory();
-    ADDR = 0x00F;
-    BUS = 0x00;
-    MainMemory();
-
-    // (RACC) BUS <- ACC
-    ADDR = 0x010;
+    ADDR = 0x10;
     BUS = 0x58;
     MainMemory();
-    ADDR = 0x011;
+    ADDR = 0x11;
     BUS = 0x00;
     MainMemory();
-
-    // (WM) 0x401 <- MBR
-    ADDR = 0x012;
-    BUS = 0x0C;
-    MainMemory();
-    ADDR = 0x013;
-    BUS = 0x01;
-    MainMemory();
-
-    // (WIB) IOBR <- 0x0B
-    ADDR = 0x014;
-    BUS = 0x38;
-    MainMemory();
-    ADDR = 0x015;
-    BUS = 0x0B;
-    MainMemory();
-
-    // (WIO) 0x000 <- IOBR
-    ADDR = 0x016;
-    BUS = 0x28;
-    MainMemory();
-    ADDR = 0x017;
-    BUS = 0x00;
-    MainMemory();
-
-    // (WB) MBR <- 0x10
-    ADDR = 0x018;
-    BUS = 0x30;
-    MainMemory();
-    ADDR = 0x019;
-    BUS = 0x10;
-    MainMemory();
-
-    // (SUB) ACC - BUS
-    ADDR = 0x01A;
-    BUS = 0xE8;
-    MainMemory();
-    ADDR = 0x01B;
-    BUS = 0x00;
-    MainMemory();
-
-    // (RACC) BUS <- ACC
-    ADDR = 0x01C;
-    BUS = 0x58;
-    MainMemory();
-    ADDR = 0x01D;
-    BUS = 0x00;
-    MainMemory();
-
-    // (WIO) 0x001 <- IOBR
-    ADDR = 0x01E;
-    BUS = 0x28;
-    MainMemory();
-    ADDR = 0x01F;
-    BUS = 0x01;
-    MainMemory();
-
-    // (SHL) ACC << 1, CF <- ACC(7)
-    ADDR = 0x020;
-    BUS = 0xB0;
-    MainMemory();
-    ADDR = 0x021;
-    BUS = 0x00;
-    MainMemory();
-
-    // (SHL) ACC << 1, CF <- ACC(7)
-    ADDR = 0x022;
-    BUS = 0xB0;
-    MainMemory();
-    ADDR = 0x023;
-    BUS = 0x00;
-    MainMemory();
-
-    // (SHR) ACC >> 1, CF <- ACC(0)
-    ADDR = 0x024;
-    BUS = 0xA8;
-    MainMemory();
-    ADDR = 0x025;
-    BUS = 0x00;
-    MainMemory();
-
-    // (RM) MBR <- 0x401
-    ADDR = 0x026;
-    BUS = 0x14;
-    MainMemory();
-    ADDR = 0x027;
-    BUS = 0x01;
-    MainMemory();
-
-    // (OR) ACC | BUS
-    ADDR = 0x028;
-    BUS = 0xC8;
-    MainMemory();
-    ADDR = 0x029;
-    BUS = 0x00;
-    MainMemory();
-
-    // (NOT) !ACC
-    ADDR = 0x02A;
-    BUS = 0xC0;
-    MainMemory();
-    ADDR = 0x02B;
-    BUS = 0x00;
-    MainMemory();
-
-    // (RIO) IOBR <- 0x001
-    ADDR = 0x02C;
-    BUS = 0x20;
-    MainMemory();
-    ADDR = 0x02D;
-    BUS = 0x01;
-    MainMemory();
-
-    // (SWAP) MBR <-> IOBR
-    ADDR = 0x02E;
+    ADDR = 0x12;
     BUS = 0x70;
     MainMemory();
-    ADDR = 0x02F;
+    ADDR = 0x13;
     BUS = 0x00;
     MainMemory();
-
-    // (XOR) ACC ^ BUS
-    ADDR = 0x030;
-    BUS = 0xB8;
+    ADDR = 0x14;
+    BUS = 0x28;
     MainMemory();
-    ADDR = 0x031;
+    ADDR = 0x15;
     BUS = 0x00;
     MainMemory();
-
-    // (WB) MBR <- 0xFF
-    ADDR = 0x032;
-    BUS = 0x30;
-    MainMemory();
-    ADDR = 0x033;
-    BUS = 0xFF;
-    MainMemory();
-
-    // (AND) ACC & BUS
-    ADDR = 0x034;
-    BUS = 0xD0;
-    MainMemory();
-    ADDR = 0x035;
-    BUS = 0x00;
-    MainMemory();
-
-    // (RM) MBR <- 0x401
-    ADDR = 0x036;
+    ADDR = 0x16;
     BUS = 0x14;
     MainMemory();
-    ADDR = 0x037;
-    BUS = 0x01;
+    ADDR = 0x17;
+    BUS = 0x04;
     MainMemory();
-
-    // (BRE) PC <- 0x03C if ACC - BUS == 0
-    ADDR = 0x038;
-    BUS = 0xA0;
-    MainMemory();
-    ADDR = 0x039;
-    BUS = 0x3C;
-    MainMemory();
-
-    // (WM) 0xF0 <- MBR // WEIRD OPERATION, IDK if TYPO or what????
-    ADDR = 0x03A;
-    BUS = 0x30;   // (WM) is shown! but test case show that MBR = 0xF0
-    MainMemory(); // will follow result of test case using the appropriate operation (WB)
-    ADDR = 0x03B;
-    BUS = 0xF0;
-    MainMemory();
-
-    // (BRGT) PC <- 0x040 if ACC - BUS > 0
-    ADDR = 0x03C;
-    BUS = 0x90;
-    MainMemory();
-    ADDR = 0x03D;
-    BUS = 0x40;
-    MainMemory();
-
-    // (BRLT) PC <- 0x044 if ACC - BUS < 0
-    ADDR = 0x03E;
-    BUS = 0x88;
-    MainMemory();
-    ADDR = 0x03F;
-    BUS = 0x44;
-    MainMemory();
-
-    // (WB) MBR <- 0x00
-    ADDR = 0x040;
-    BUS = 0x30;
-    MainMemory();
-    ADDR = 0x041;
-    BUS = 0x00; // 0x00 original
-    MainMemory();
-
-    // (WACC) ACC <- BUS
-    ADDR = 0x042;
-    BUS = 0x48;
-    MainMemory();
-    ADDR = 0x043;
-    BUS = 0x00; // 0x00
-    MainMemory();
-
-    // (WB) MBR <- 0x03
-    ADDR = 0x044;
-    BUS = 0x30;
-    MainMemory();
-    ADDR = 0x045;
-    BUS = 0x03;
-    MainMemory();
-
-    // (WACC) ACC <- BUS
-    ADDR = 0x046;
-    BUS = 0x48;
-    MainMemory();
-    ADDR = 0x047;
-    BUS = 0x00;
-    MainMemory();
-
-    // (WB) MBR <- 0x00
-    ADDR = 0x048;
-    BUS = 0x30;
-    MainMemory();
-    ADDR = 0x049;
-    BUS = 0x00;
-    MainMemory();
-
-    // (BRE) PC <- 0x052 if ACC - BUS == 0 //NEEDS CHECKING HERE!!!
-    ADDR = 0x04A;
-    BUS = 0xA0;
-    MainMemory();
-    ADDR = 0x04B;
-    BUS = 0x52;
-    MainMemory();
-
-    // (WB) MBR <- 0x01
-    ADDR = 0x04C;
-    BUS = 0x30;
-    MainMemory(); // WB
-    ADDR = 0x04D;
-    BUS = 0x01;
-    MainMemory();
-
-    // (SUB) ACC - BUS
-    ADDR = 0x04E;
+    ADDR = 0x18;
     BUS = 0xE8;
     MainMemory();
-    ADDR = 0x04F;
+    ADDR = 0x19;
     BUS = 0x00;
     MainMemory();
-
-    // (BR) PC <- 0x048
-    ADDR = 0x050;
-    BUS = 0x18;
+    ADDR = 0x1A;
+    BUS = 0x14;
     MainMemory();
-    ADDR = 0x051;
-    BUS = 0x48;
+    ADDR = 0x1B;
+    BUS = 0x02;
     MainMemory();
-
-    // EOP
-    ADDR = 0x052;
+    ADDR = 0x1C;
+    BUS = 0x98;
+    MainMemory();
+    ADDR = 0x1D;
+    BUS = 0x10;
+    MainMemory();
+    ADDR = 0x1E;
+    BUS = 0x14;
+    MainMemory();
+    ADDR = 0x1F;
+    BUS = 0x02;
+    MainMemory();
+    ADDR = 0x20;
+    BUS = 0x70;
+    MainMemory();
+    ADDR = 0x21;
+    BUS = 0x00;
+    MainMemory();
+    ADDR = 0x22;
+    BUS = 0x28;
+    MainMemory();
+    ADDR = 0x23;
+    BUS = 0x00;
+    MainMemory();
+    ADDR = 0x24;
     BUS = 0xF8;
     MainMemory();
-    ADDR = 0x053;
+    ADDR = 0x25;
     BUS = 0x00;
     MainMemory();
 }
