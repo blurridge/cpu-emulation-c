@@ -38,6 +38,7 @@ void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short o
 int CU(void);
 void SevenSegment();
 void InputSim(void);
+void reverseBitsAtAddress(unsigned char address);
 
 int main()
 {
@@ -349,8 +350,16 @@ int CU(void)
                 BUS = IO_BR;
             }
             IOMemory();
-            // InputSim();
-            SevenSegment();
+            if (ADDR == 0x001)
+            {
+                iOData[0x01F] = 0x00; // Prepare for buffering 0x001 data
+            }
+            InputSim();
+            if (ADDR == 0x000)
+            {
+                reverseBitsAtAddress(0x000);
+                SevenSegment();
+            }
         }
         else if (inst_code == 0x06)
         { // write data to MBR (WB)
@@ -719,10 +728,10 @@ void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short o
         printf("Instruction\t: BR\n");
         printf("Branching to 0x%X on the next cycle.\n", operand);
     }
-    else if (inst_code == 0x07)
+    else if (inst_code == 0x04)
     {
-        printf("Instruction\t: WIB\n");
-        printf("Loading data to IOBR...\n");
+        printf("Instruction \t: RIO\n");
+        printf("Reading data from IO...\n");
         printf("IOBR \t\t: 0x%02X\n", IO_BR);
     }
     else if (inst_code == 0x05)
@@ -735,6 +744,12 @@ void outputDisplay(unsigned short IR, unsigned short inst_code, unsigned short o
         printf("Instruction\t: WB\n");
         printf("Loading data to MBR...\n");
         printf("MBR\t\t: 0x%02X\n", MBR);
+    }
+    else if (inst_code == 0x07)
+    {
+        printf("Instruction\t: WIB\n");
+        printf("Loading data to IOBR...\n");
+        printf("IOBR \t\t: 0x%02X\n", IO_BR);
     }
     else if (inst_code == 0x1F)
     {
@@ -916,16 +931,16 @@ void initMemory(void)
     BUS = 0x28;
     MainMemory();
     ADDR = 0x15;
-    BUS = 0x00;
+    BUS = 0x01;
     MainMemory();
     ADDR = 0x16;
-    BUS = 0x14;
+    BUS = 0x20;
     MainMemory();
     ADDR = 0x17;
-    BUS = 0x04;
+    BUS = 0x1F;
     MainMemory();
     ADDR = 0x18;
-    BUS = 0xE8;
+    BUS = 0x28;
     MainMemory();
     ADDR = 0x19;
     BUS = 0x00;
@@ -934,13 +949,13 @@ void initMemory(void)
     BUS = 0x14;
     MainMemory();
     ADDR = 0x1B;
-    BUS = 0x02;
+    BUS = 0x04;
     MainMemory();
     ADDR = 0x1C;
-    BUS = 0x98;
+    BUS = 0xE8;
     MainMemory();
     ADDR = 0x1D;
-    BUS = 0x10;
+    BUS = 0x00;
     MainMemory();
     ADDR = 0x1E;
     BUS = 0x14;
@@ -949,21 +964,33 @@ void initMemory(void)
     BUS = 0x02;
     MainMemory();
     ADDR = 0x20;
-    BUS = 0x70;
+    BUS = 0x98;
     MainMemory();
     ADDR = 0x21;
-    BUS = 0x00;
+    BUS = 0x10;
     MainMemory();
     ADDR = 0x22;
-    BUS = 0x28;
+    BUS = 0x14;
     MainMemory();
     ADDR = 0x23;
-    BUS = 0x00;
+    BUS = 0x02;
     MainMemory();
     ADDR = 0x24;
-    BUS = 0xF8;
+    BUS = 0x70;
     MainMemory();
     ADDR = 0x25;
+    BUS = 0x00;
+    MainMemory();
+    ADDR = 0x26;
+    BUS = 0x28;
+    MainMemory();
+    ADDR = 0x27;
+    BUS = 0x00;
+    MainMemory();
+    ADDR = 0x28;
+    BUS = 0xF8;
+    MainMemory();
+    ADDR = 0x29;
     BUS = 0x00;
     MainMemory();
 }
@@ -1071,4 +1098,18 @@ void SevenSegment()
         printf(" XXXXX\n");
     }
     // getc(stdin);
+}
+
+void reverseBitsAtAddress(unsigned char address)
+{
+    unsigned char data = iOData[address];
+    unsigned char reversedData = 0;
+    for (int i = 0; i < 8; i++)
+    {
+        if (data & (1 << i))
+        {
+            reversedData |= (1 << (7 - i));
+        }
+    }
+    iOData[address] = reversedData;
 }

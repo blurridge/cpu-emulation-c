@@ -6,12 +6,14 @@ ORG 0x00
             WB 0x09     ; 0x09 -> MBR
             WM 0x406    ; MBR -> BUS -> 0x406
             RM 0x406    ; Data in 0x406 -> BUS -> MBR
-            WACC        ; BUS -> MBR -> ACC
+            WACC        ; MBR -> BUS -> ACC
 dec_loop    RACC        ; ACC -> BUS -> MBR
             SWAP        ; MBR <-> IOBR
+            WIO 0x001   ; IOBR -> 0x001
+            RIO 0x01F   ; 0x01F -> IOBR
             WIO 0x000   ; IOBR -> 0x000
             RM 0x404    ; Data in 0x404 -> BUS -> MBR
-            SUB         ; ACC - BUS
+            SUB 
             RM 0x402    ; Data in 0x404 -> BUS -> MBR
             BRNE dec_loop ; BRANCH IF ACC - BUS != 0
             RM 0x402    ; Data in 0x402 -> BUS -> MBR
